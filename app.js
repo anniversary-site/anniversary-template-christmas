@@ -151,6 +151,23 @@
   // ---------- desktop ----------
   var MAP_WIDTH = 1585, MAP_HEIGHT = 992;
   var camera = { scale: 1, x: 0, y: 0 };
+  var PLAYER_RADIUS = 17;
+  // Map-space footprints for buildings, the fenced tree, benches, snowman and perimeter fences.
+  var BLOCKED_AREAS = [
+    [[0,0],[320,0],[320,450],[260,475],[0,475]],                 // photo studio + left houses
+    [[300,305],[455,305],[455,495],[300,495]],                   // small photo booth
+    [[0,525],[235,525],[235,805],[0,805]],                       // present stall
+    [[350,15],[685,15],[685,305],[350,305]],                     // post office
+    [[580,0],[980,0],[980,430],[580,430]],                       // tree and its fence
+    [[1015,0],[1515,0],[1515,350],[1015,350]],                   // music stage and rear buildings
+    [[1220,285],[1585,285],[1585,645],[1220,645]],               // bakery and right houses
+    [[1050,585],[1230,585],[1230,740],[1050,740]],               // snowman and sled
+    [[95,455],[270,455],[270,565],[95,565]],                     // left bench and lamp
+    [[1055,805],[1230,805],[1230,925],[1055,925]],               // lower bench and lamp
+    [[0,800],[390,800],[390,992],[0,992]],                       // lower-left fence and scenery
+    [[790,820],[1260,820],[1260,992],[790,992]],                 // lower fence and planters
+    [[1270,655],[1585,655],[1585,992],[1270,992]]                // lower-right tree and buildings
+  ];
   var selectedMapHighlight = null, requestedMapHighlight = null, mapHighlightCache = Object.create(null);
   function showMapHighlight(path) {
     var layer = $("#market-highlight-map");
@@ -236,35 +253,84 @@
   }
 
   var playerInstalled = false;
-  function setPlayer(left, top) {
+  function pointInPolygon(x, y, polygon) {
+    var inside = false;
+    for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      var xi = polygon[i][0], yi = polygon[i][1], xj = polygon[j][0], yj = polygon[j][1];
+      if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  }
+  function segmentDistanceSquared(px, py, ax, ay, bx, by) {
+    var dx = bx - ax, dy = by - ay;
+    var t = dx || dy ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy))) : 0;
+    var x = ax + t * dx, y = ay + t * dy;
+    return (px - x) * (px - x) + (py - y) * (py - y);
+  }
+  function canOccupy(x, y) {
+    if (x < PLAYER_RADIUS || x > MAP_WIDTH - PLAYER_RADIUS || y < PLAYER_RADIUS || y > MAP_HEIGHT - PLAYER_RADIUS) return false;
+    var radiusSquared = PLAYER_RADIUS * PLAYER_RADIUS;
+    return !BLOCKED_AREAS.some(function (polygon) {
+      if (pointInPolygon(x, y, polygon)) return true;
+      for (var i = 0; i < polygon.length; i++) {
+        var a = polygon[i], b = polygon[(i + 1) % polygon.length];
+        if (segmentDistanceSquared(x, y, a[0], a[1], b[0], b[1]) < radiusSquared) return true;
+      }
+      return false;
+    });
+  }
+  function nearestWalkable(x, y) {
+    if (canOccupy(x, y)) return { x: x, y: y };
+    for (var radius = 12; radius <= 360; radius += 12) {
+      for (var angle = 0; angle < 360; angle += 15) {
+        var radians = angle * Math.PI / 180;
+        var candidate = { x: x + Math.cos(radians) * radius, y: y + Math.sin(radians) * radius };
+        if (canOccupy(candidate.x, candidate.y)) return candidate;
+      }
+    }
+    return { x: MAP_WIDTH * .5, y: MAP_HEIGHT * .62 };
+  }
+  function setPlayer(left, top, snapToWalkable) {
     var player = $("#player");
     if (!player) return;
-    left = Math.max(3, Math.min(97, left));
-    top = Math.max(5, Math.min(95, top));
+    var x = Math.max(0, Math.min(MAP_WIDTH, left / 100 * MAP_WIDTH));
+    var y = Math.max(0, Math.min(MAP_HEIGHT, top / 100 * MAP_HEIGHT));
+    if (!canOccupy(x, y)) {
+      if (!snapToWalkable) return false;
+      var nearest = nearestWalkable(x, y); x = nearest.x; y = nearest.y;
+    }
+    left = x / MAP_WIDTH * 100;
+    top = y / MAP_HEIGHT * 100;
     player.style.left = left + "%";
     player.style.top = top + "%";
     try { localStorage.setItem("urluv-winter-player:" + (site.key || "demo"), JSON.stringify({ left: left, top: top })); } catch (e) {}
     updateCamera();
+    return true;
   }
   function movePlayer(clientX, clientY) {
     var rect = $("#desktop").getBoundingClientRect();
     setPlayer((clientX - rect.left - camera.x) / camera.scale / MAP_WIDTH * 100,
-      (clientY - rect.top - camera.y) / camera.scale / MAP_HEIGHT * 100);
+      (clientY - rect.top - camera.y) / camera.scale / MAP_HEIGHT * 100, true);
   }
   function walkTo(icon) {
     setPlayer((icon.offsetLeft + icon.offsetWidth / 2) / MAP_WIDTH * 100,
-      (icon.offsetTop + icon.offsetHeight * .9) / MAP_HEIGHT * 100);
+      (icon.offsetTop + icon.offsetHeight * .9) / MAP_HEIGHT * 100, true);
   }
   function installMovement() {
     if (playerInstalled) return;
     playerInstalled = true;
     var player = $("#player"), start = { left: 50, top: 62 };
     try { start = JSON.parse(localStorage.getItem("urluv-winter-player:" + (site.key || "demo")) || "null") || start; } catch (e) {}
-    player.style.left = start.left + "%"; player.style.top = start.top + "%";
+    setPlayer(start.left, start.top, true);
     updateCamera();
     window.addEventListener("resize", updateCamera);
     function step(dx, dy) {
       var left = parseFloat(player.style.left) || 50, top = parseFloat(player.style.top) || 62;
+      var x = left / 100 * MAP_WIDTH, y = top / 100 * MAP_HEIGHT;
+      var distance = Math.sqrt(dx * dx + dy * dy), steps = Math.ceil(distance / 8);
+      for (var i = 1; i <= steps; i++) {
+        if (!canOccupy(x + dx * i / steps, y + dy * i / steps)) return;
+      }
       player.classList.remove("facing-up", "facing-down", "facing-left", "facing-right");
       player.classList.add(Math.abs(dx) > Math.abs(dy)
         ? (dx < 0 ? "facing-left" : "facing-right")
@@ -274,8 +340,12 @@
       player.walkTimer = window.setTimeout(function () { player.classList.remove("walking"); }, 180);
     }
     document.addEventListener("keydown", function (event) {
-      if (event.target.closest("input,textarea,[contenteditable=true]") || $("#desktop").hidden) return;
-      var move = { ArrowUp:[0,-44],w:[0,-44],W:[0,-44],ArrowDown:[0,44],s:[0,44],S:[0,44],ArrowLeft:[-44,0],a:[-44,0],A:[-44,0],ArrowRight:[44,0],d:[44,0],D:[44,0] }[event.key];
+      if (event.target.closest("input,textarea,select,[contenteditable=true]") || $("#desktop").hidden) return;
+      var move = {
+        ArrowUp:[0,-44], ArrowDown:[0,44], ArrowLeft:[-44,0], ArrowRight:[44,0],
+        KeyW:[0,-44], KeyS:[0,44], KeyA:[-44,0], KeyD:[44,0]
+      }[event.code] || { ArrowUp:[0,-44], ArrowDown:[0,44], ArrowLeft:[-44,0], ArrowRight:[44,0],
+        w:[0,-44], W:[0,-44], s:[0,44], S:[0,44], a:[-44,0], A:[-44,0], d:[44,0], D:[44,0] }[event.key];
       if (!move) return;
       event.preventDefault(); step(move[0], move[1]);
     });
@@ -604,9 +674,12 @@
     var a = e.target.closest("button"); if (!a) return; sm.hidden = true;
     var act = a.dataset.act;
     if (act === "information") openInformation();
-    else if (act === "gift") $("#memo-add").click();
+    else if (act === "gallery") openGalleryChoice();
+    else if (act === "letter") openNote("letter");
+    else if (act === "music") openMusic();
     else if (act === "booth") openBooth();
     else if (act === "paint") openPaint();
+    else if (act === "game") openMinesweeper();
     else if (act === "logout") { try { sessionStorage.removeItem("anniv-auth"); } catch (er) {} if (site.forget) site.forget(); location.reload(); }
   });
 })();

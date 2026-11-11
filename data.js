@@ -1,10 +1,10 @@
 // 크리스마스 마켓 데모 데이터. 고객 사이트는 urluv-site.js가 API 응답으로 내용을 바꿉니다.
 window.SITE = {
-  title: "URLUV 겨울 마켓",
+  title: "URLUV CHRISTMAS",
   siteMode: "christmas",
   passwordSalt: "winter-market:",
   passwordHash: "",
-  loginTitle: "URLUV 겨울 마켓",
+  loginTitle: "URLUV CHRISTMAS",
   loginMessage: "우리의 크리스마스 마켓에 놀러오세요.\n(데모는 비밀번호 없이 둘러볼 수 있어요.)",
   userName: "겨울 마켓 방문자",
   startDate: "2026-12-25",
@@ -12,7 +12,7 @@ window.SITE = {
   renewalNoticeDays: 3,
   renewalUrl: "https://urluv.shop/",
   names: ["우리의 겨울"],
-  startMenu: "겨울 마켓",
+  startMenu: "CHRISTMAS",
   theme: { main: "#bd5145", dark: "#315247", light: "#fff1cf", bg: "#315247" },
 
   // 마켓 가판대가 바탕화면 아이콘을 대신합니다.

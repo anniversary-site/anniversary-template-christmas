@@ -716,6 +716,15 @@ select {
   padding: 3px 6px;
 }
 
+.pixel-ui-gift {
+  width: 18px;
+  height: 18px;
+  margin-right: 4px;
+  vertical-align: -4px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
 #memo-placement {
   position: fixed;
   inset: 0 0 34px;
@@ -742,13 +751,18 @@ select {
 
 .memo-preview {
   position: absolute;
-  width: min(260px, calc(100vw - 16px));
-  height: min(240px, max(80px, calc(100vh - 54px)));
-  border: 2px dashed var(--dark);
-  background: rgba(255, 250, 240, .6);
-  padding: 8px;
-  color: var(--dark);
+  width: 62px;
+  height: 70px;
   pointer-events: none;
+  opacity: .8;
+  image-rendering: pixelated;
+}
+
+.memo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 /* Usage period renewal notice */
 #start {
@@ -864,6 +878,50 @@ select {
 }
 .market-highlight-map.is-visible { opacity: 1; }
 
+#market-gifts {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  pointer-events: none;
+}
+
+.market-gift {
+  position: absolute;
+  width: 62px;
+  height: 70px;
+  margin: -64px 0 0 -31px;
+  padding: 3px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  filter: drop-shadow(2px 3px 1px #17201c99);
+  transition: transform .12s steps(2, end), filter .12s ease;
+}
+
+.market-gift:hover,
+.market-gift:focus-visible {
+  z-index: 2;
+  transform: translateY(-5px) scale(1.12);
+  filter: drop-shadow(0 0 5px #fff0b8) drop-shadow(2px 3px 1px #17201c99);
+  outline: none;
+}
+
+.market-gift img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* 빨간 선물 PNG는 캔버스가 세로형이라 같은 크기로 표시해도 더 커 보여 보정합니다. */
+.market-gift img[src*="gift-red.png"],
+.memo-preview img[src*="gift-red.png"],
+.desktop-memo .title img[src*="gift-red.png"] {
+  transform: scale(.78);
+}
+
 #desktop.winter-market .desktop-icons {
   position: absolute;
   inset: 0;
@@ -884,7 +942,7 @@ select {
 }
 
 #desktop.winter-market .dicon[data-market-id="photo"] { left: 0%; top: 12%; width: 22%; height: 38%; }
-#desktop.winter-market .dicon[data-market-id="letter"] { left: 24%; top: 4%; width: 22%; height: 35%; }
+#desktop.winter-market .dicon[data-market-id="letter"] { left: 24%; top: 4%; width: 22%; height: 30%; }
 #desktop.winter-market .dicon[data-market-id="music"] { left: 65%; top: 5%; width: 23%; height: 32%; }
 #desktop.winter-market .dicon[data-market-id="market"] { left: 78%; top: 29%; width: 22%; height: 36%; z-index: 1; }
 #desktop.winter-market .dicon[data-market-id="tree"] { left: 39%; top: 5%; width: 23%; height: 38%; }
@@ -961,6 +1019,7 @@ select {
 #player.facing-down .avatar-sprite { background-position-y: 0; }
 #player.facing-up .avatar-sprite { background-position-y: 33.3333%; }
 #player.facing-left .avatar-sprite { background-position-y: 66.6667%; }
+#player.facing-left .avatar-sprite[data-avatar="3"] { transform: scaleX(-1); }
 #player.facing-right .avatar-sprite { background-position-y: 100%; }
 #player.walking .avatar-sprite { animation: avatar-walk .28s steps(1, end) infinite; }
 @keyframes avatar-walk { to { background-position-x: 100%; } }
@@ -995,6 +1054,8 @@ select {
 
 .desktop-memo .titlebar { background: #9b4536; color: #fff3d2; }
 .desktop-memo .titlebar .title { color: #fff3d2; }
+.desktop-memo .title img { width: 22px; height: 22px; margin-right: 5px; object-fit: contain; image-rendering: pixelated; vertical-align: middle; }
+.desktop-memo .memo-delete { min-width: 35px; padding: 0 4px; font-size: 10px; }
 .desktop-memo textarea { position: relative; z-index: 2; background: rgba(255, 249, 231, .92); border-color: #d8a84e; }
 
 #memo-placement { background: rgba(22, 42, 34, .28); }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  <title>URLUV 겨울 마켓</title>
+  <title>URLUV CHRISTMAS</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -28,9 +28,10 @@
   </div>
 
   <div id="desktop" class="winter-market" hidden>
-    <div class="market-banner"><strong>❄ URLUV WINTER MARKET</strong><span>마켓을 산책하고, 가판대를 눌러 추억을 열어보세요.</span><kbd>W A S D</kbd><kbd>↑ ↓ ← →</kbd></div>
+    <div class="market-banner"><strong>❄ URLUV CHRISTMAS</strong><span>마켓을 산책하고, 가판대를 눌러 추억을 열어보세요.</span><kbd>W A S D</kbd><kbd>↑ ↓ ← →</kbd></div>
     <div class="market-world">
       <div id="market-highlight-map" class="market-highlight-map" aria-hidden="true"></div>
+      <div id="market-gifts" aria-label="마켓에 놓인 선물"></div>
       <div id="player" aria-label="내 캐릭터" style="left:50%;top:62%"><span class="avatar-sprite" aria-hidden="true"></span><span class="player-name">나</span></div>
     </div>
     <div class="market-dpad" aria-label="캐릭터 이동">
@@ -43,7 +44,7 @@
   <div id="desktop-memos" hidden></div>
   <div id="memo-placement" hidden>
     <p role="status">마켓에 선물을 놓을 곳을 눌러 주세요. <button id="memo-placement-cancel" class="btn">취소</button></p>
-    <div class="memo-preview" aria-hidden="true">🎁 선물</div>
+    <div class="memo-preview" aria-hidden="true"><img alt=""></div>
   </div>
   <div id="windows"></div>
 
@@ -56,7 +57,13 @@
         <p id="renewal-title">기간을 연장할까요?</p>
         <a id="renewal-link" href="https://urluv.shop/" target="_blank" rel="noopener noreferrer">Yes ↗</a>
       </section>
-      <button data-act="information"><img class="sm-icon" src="assets/icons/market-tree.svg" alt="" draggable="false"><span>우리의 트리</span></button>
+      <button data-act="information"><img class="sm-icon" src="assets/icons/market-tree.svg" alt="" draggable="false"><span>우리의 이야기</span></button>
+      <button data-act="gallery"><img class="sm-icon" src="assets/icons/market-photo.svg" alt="" draggable="false"><span>사진 / 영상</span></button>
+      <button data-act="letter"><img class="sm-icon" src="assets/icons/market-post.svg" alt="" draggable="false"><span>크리스마스 편지</span></button>
+      <button data-act="music"><img class="sm-icon" src="assets/icons/market-music.svg" alt="" draggable="false"><span>겨울 플레이리스트</span></button>
+      <button data-act="booth"><img class="sm-icon" src="assets/icons/market-photo.svg" alt="" draggable="false"><span>포토부스</span></button>
+      <button data-act="paint"><img class="sm-icon" src="assets/icons/market-gift.svg" alt="" draggable="false"><span>크리스마스 마켓</span></button>
+      <button data-act="game"><img class="sm-icon" src="assets/icons/game.svg" alt="" draggable="false"><span>눈사람 게임</span></button>
       <hr>
       <button data-act="logout">🔒 Log Off</button>
     </div>
@@ -65,10 +72,10 @@
   <div id="taskbar" hidden>
     <span id="renewal-badge" aria-hidden="true" hidden>!</span>
     <button id="start" class="btn" aria-label="Start" aria-expanded="false" aria-controls="startmenu">
-      ❄ 마켓
+      ❄ CHRISTMAS
     </button>
     <div class="sep"></div>
-    <button id="memo-add" class="btn">🎁 선물 남기기</button>
+    <button id="memo-add" class="btn"><img class="pixel-ui-gift" src="assets/icons/decorations/gift-red.png" alt="" draggable="false">선물 남기기</button>
     <button id="memo-toggle" class="btn" aria-controls="desktop-memos" aria-expanded="true">선물 숨기기</button>
     <div id="tasks"></div>
     <div class="sep"></div>
