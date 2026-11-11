@@ -865,6 +865,7 @@ select {
   image-rendering: pixelated;
   will-change: transform;
 }
+
 .market-highlight-map {
   position: absolute;
   z-index: 1;
@@ -1019,7 +1020,6 @@ select {
 #player.facing-down .avatar-sprite { background-position-y: 0; }
 #player.facing-up .avatar-sprite { background-position-y: 33.3333%; }
 #player.facing-left .avatar-sprite { background-position-y: 66.6667%; }
-#player.facing-left .avatar-sprite[data-avatar="3"] { transform: scaleX(-1); }
 #player.facing-right .avatar-sprite { background-position-y: 100%; }
 #player.walking .avatar-sprite { animation: avatar-walk .28s steps(1, end) infinite; }
 @keyframes avatar-walk { to { background-position-x: 100%; } }

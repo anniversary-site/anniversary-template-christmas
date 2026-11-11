@@ -99,7 +99,7 @@
     if (!sprite) return;
     var avatar = Math.floor(Math.random() * 4) + 1;
     sprite.dataset.avatar = String(avatar);
-    sprite.style.backgroundImage = 'url("assets/sprites/market-avatar-' + avatar + '.png")';
+    sprite.style.backgroundImage = 'url("assets/sprites/market-avatar-' + avatar + '.png' + (avatar === 3 ? '?v=2' : '') + '")';
   }
   if (site.key && site.previewing) {
     // 운영자 미리보기: 비밀번호 화면을 건너뛰고 바로 엽니다.
@@ -152,21 +152,27 @@
   var MAP_WIDTH = 1585, MAP_HEIGHT = 992;
   var camera = { scale: 1, x: 0, y: 0 };
   var PLAYER_RADIUS = 17;
-  // Map-space footprints for buildings, the fenced tree, benches, snowman and perimeter fences.
+  // Tight map-space silhouettes prevent entering the painted object areas and rear sides.
   var BLOCKED_AREAS = [
-    [[0,0],[320,0],[320,450],[260,475],[0,475]],                 // photo studio + left houses
-    [[300,305],[455,305],[455,495],[300,495]],                   // small photo booth
-    [[0,525],[235,525],[235,805],[0,805]],                       // present stall
-    [[350,15],[685,15],[685,305],[350,305]],                     // post office
-    [[580,0],[980,0],[980,430],[580,430]],                       // tree and its fence
-    [[1015,0],[1515,0],[1515,350],[1015,350]],                   // music stage and rear buildings
-    [[1220,285],[1585,285],[1585,645],[1220,645]],               // bakery and right houses
-    [[1050,585],[1230,585],[1230,740],[1050,740]],               // snowman and sled
-    [[95,455],[270,455],[270,565],[95,565]],                     // left bench and lamp
-    [[1055,805],[1230,805],[1230,925],[1055,925]],               // lower bench and lamp
-    [[0,800],[390,800],[390,992],[0,992]],                       // lower-left fence and scenery
-    [[790,820],[1260,820],[1260,992],[790,992]],                 // lower fence and planters
-    [[1270,655],[1585,655],[1585,992],[1270,992]]                // lower-right tree and buildings
+    [[0,224],[34,180],[160,145],[304,194],[318,400],[300,446],[35,460],[0,415]], // photo studio
+    [[309,345],[365,322],[408,312],[451,345],[455,473],[425,493],[320,485]],       // small photo booth
+    [[0,557],[65,532],[155,533],[214,582],[231,773],[0,805]],                     // present stall
+    [[350,96],[421,61],[535,48],[647,74],[680,258],[650,303],[360,300]],           // post office
+    [[650,117],[710,34],[800,0],[900,43],[957,150],[980,292],[970,403],[930,430],
+      [612,426],[585,343],[603,219]],                                               // tree and fence silhouette
+    [[1030,248],[1033,147],[1071,91],[1160,101],[1261,57],[1378,91],[1410,179],
+      [1410,314],[1371,348],[1060,341]],                                            // music stage
+    [[1220,414],[1242,359],[1330,315],[1413,286],[1490,338],[1585,379],[1585,631],
+      [1534,660],[1290,645],[1240,598]],                                            // bakery
+    [[1052,620],[1103,594],[1150,589],[1191,617],[1225,657],[1235,710],[1180,737],
+      [1080,723],[1044,682]],                                                       // snowman and sled
+    [[124,477],[190,452],[250,479],[269,527],[132,540]],                            // left bench
+    [[1070,831],[1144,806],[1214,824],[1232,870],[1080,880]],                       // lower bench
+    [[0,730],[165,720],[224,771],[232,805],[0,829]],                               // left chalet base
+    [[125,780],[354,768],[379,843],[146,860]],                                     // lower-left fence
+    [[0,895],[390,880],[390,992],[0,992]],                                         // lower-left map edge
+    [[800,875],[1255,780],[1285,824],[835,933]],                                   // lower market fence
+    [[1390,830],[1585,765],[1585,992],[1430,992],[1370,904]]                      // lower-right tree/building edge
   ];
   var selectedMapHighlight = null, requestedMapHighlight = null, mapHighlightCache = Object.create(null);
   function showMapHighlight(path) {
