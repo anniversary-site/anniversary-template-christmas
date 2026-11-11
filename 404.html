@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>Our Little Lab</title>
+  <meta name="robots" content="noindex">
+  <script>
+    // GitHub Pages는 cupid.urluv.shop/{사이트키} 같은 주소의 파일이 없으면 이 페이지를 보여 줍니다.
+    // 사이트 키면 같은 폴더의 ?site={사이트키}로 다시 열고, urluv-site.js가 주소창을 다시 /{사이트키}로 바꿉니다.
+    (function () {
+      var parts = location.pathname.replace(/\/+$/, "").split("/");
+      var key = parts.pop() || "";
+      var dir = parts.join("/") + "/";
+      if (/^[a-km-np-z2-9]{12}$/.test(key)) location.replace(dir + "?site=" + key + location.hash);
+      else location.replace(dir);
+    })();
+  </script>
+</head>
+<body></body>
+</html>

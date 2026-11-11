@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>URLUV 겨울 마켓</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="login">
+    <div class="win focused" id="login-win">
+      <div class="titlebar"><span class="title" id="login-title"></span><button class="tbtn" aria-label="close">✕</button></div>
+      <div class="login-body">
+        <div class="login-key">🔑</div>
+        <div class="login-main">
+          <p id="login-msg"></p>
+          <label><span>User name:</span> <input id="login-user" disabled></label>
+          <label><span>Password:</span> <input id="login-pw" type="password" autocomplete="off" autofocus></label>
+          <p id="login-err" hidden>Wrong Password!</p>
+        </div>
+        <div class="login-btns">
+          <button class="btn" id="login-ok">OK</button>
+          <button class="btn" id="login-cancel">Cancel</button>
+        </div>
+      </div>
+      <div class="login-demo" id="login-demo-row" hidden><button class="btn" id="login-demo">비밀번호 없이 둘러보기 ▶</button></div>
+    </div>
+  </div>
+
+  <div id="desktop" class="winter-market" hidden>
+    <div class="market-banner"><strong>❄ URLUV WINTER MARKET</strong><span>마켓을 산책하고, 가판대를 눌러 추억을 열어보세요.</span><kbd>W A S D</kbd><kbd>↑ ↓ ← →</kbd></div>
+    <div class="market-world">
+      <div id="player" aria-label="내 캐릭터" style="left:50%;top:62%"><span class="avatar-sprite" aria-hidden="true"></span><span class="player-name">나</span></div>
+    </div>
+    <div class="market-dpad" aria-label="캐릭터 이동">
+      <button type="button" data-move="up" aria-label="위로 이동">▲</button>
+      <button type="button" data-move="left" aria-label="왼쪽으로 이동">◀</button>
+      <button type="button" data-move="down" aria-label="아래로 이동">▼</button>
+      <button type="button" data-move="right" aria-label="오른쪽으로 이동">▶</button>
+    </div>
+  </div>
+  <div id="desktop-memos" hidden></div>
+  <div id="memo-placement" hidden>
+    <p role="status">마켓에 선물을 놓을 곳을 눌러 주세요. <button id="memo-placement-cancel" class="btn">취소</button></p>
+    <div class="memo-preview" aria-hidden="true">🎁 선물</div>
+  </div>
+  <div id="windows"></div>
+
+  <div id="startmenu" hidden>
+    <div class="sm-side"><span id="sm-title"></span></div>
+    <div class="sm-items">
+      <section id="renewal-notice" class="renewal-notice" aria-labelledby="renewal-title" hidden>
+        <span class="renewal-label">! 알림</span>
+        <p id="renewal-timing"></p>
+        <p id="renewal-title">기간을 연장할까요?</p>
+        <a id="renewal-link" href="https://urluv.shop/" target="_blank" rel="noopener noreferrer">Yes ↗</a>
+      </section>
+      <button data-act="information"><img class="sm-icon" src="assets/icons/market-tree.svg" alt="" draggable="false"><span>우리의 트리</span></button>
+      <button data-act="gift"><img class="sm-icon" src="assets/icons/market-gift.svg" alt="" draggable="false"><span>선물 남기기</span></button>
+      <hr>
+      <button data-act="logout">🔒 Log Off</button>
+    </div>
+  </div>
+
+  <div id="taskbar" hidden>
+    <span id="renewal-badge" aria-hidden="true" hidden>!</span>
+    <button id="start" class="btn" aria-label="Start" aria-expanded="false" aria-controls="startmenu">
+      ❄ 마켓
+    </button>
+    <div class="sep"></div>
+    <button id="memo-add" class="btn">🎁 선물 남기기</button>
+    <button id="memo-toggle" class="btn" aria-controls="desktop-memos" aria-expanded="true">선물 숨기기</button>
+    <div id="tasks"></div>
+    <div class="sep"></div>
+    <div id="tray">
+      <span id="dday" title="D-day"></span>
+      <span id="clover" title="크리스마스 인사">❄</span>
+      <span id="clock"></span>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="urluv-site.js"></script>
+  <script src="memos.js"></script>
+  <script src="renewal.js"></script>
+  <script src="minesweeper.js"></script>
+  <script src="music.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
