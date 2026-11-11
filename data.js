@@ -17,11 +17,15 @@ window.SITE = {
 
   // 마켓 가판대가 바탕화면 아이콘을 대신합니다.
   icons: [
-    { id: "photo", label: "사진관", icon: "assets/icons/market-photo.svg", type: "folder", ref: "photo", windowTitle: "우리의 겨울 사진" },
-    { id: "letter", label: "편지 우체국", icon: "assets/icons/market-post.svg", type: "note", ref: "letter", windowTitle: "크리스마스 편지" },
-    { id: "music", label: "캐럴 무대", icon: "assets/icons/market-music.svg", type: "folder", ref: "record", windowTitle: "겨울 플레이리스트" },
-    { id: "gift", label: "선물 놓는 곳", icon: "assets/icons/market-gift.svg", type: "gift", windowTitle: "선물 남기기" },
-    { id: "tree", label: "우리의 트리", icon: "assets/icons/market-tree.svg", type: "information", windowTitle: "우리의 크리스마스" }
+    { id: "photo", label: "사진관", type: "gallery", highlight: "assets/highlights/maps/photo-studio.jpg" },
+    { id: "letter", label: "편지 우체국", type: "note", ref: "letter", windowTitle: "크리스마스 편지", highlight: "assets/highlights/maps/post-office.jpg" },
+    { id: "music", label: "캐럴 무대", type: "folder", ref: "record", windowTitle: "겨울 플레이리스트", highlight: "assets/highlights/maps/music-stage.jpg" },
+    { id: "market", label: "크리스마스 마켓", type: "paint", highlight: "assets/highlights/maps/christmas-market.jpg" },
+    { id: "tree", label: "우리의 트리", type: "information", windowTitle: "우리의 크리스마스", highlight: "assets/highlights/maps/christmas-tree.jpg" },
+    { id: "booth", label: "포토부스", type: "photobooth", highlight: "assets/highlights/maps/photo-booth.jpg" },
+    { id: "internet", label: "마켓 안내", type: "link", url: "https://urluv.shop/", highlight: "assets/highlights/maps/market-sign.jpg" },
+    { id: "trash", label: "분리수거함", type: "trash", highlight: "assets/highlights/maps/recycling-bin.jpg" },
+    { id: "game", label: "눈사람 게임", type: "game", highlight: "assets/highlights/maps/snowman-sled.jpg" }
   ],
 
   information: { specialDate: "12월 25일", specialPlace: "우리의 겨울 마켓", story: "올해도 함께여서 참 좋았어." },
@@ -36,6 +40,10 @@ window.SITE = {
         { name: "마켓 산책.jpg", type: "image", src: "", caption: "마켓을 걷던 밤" },
         { name: "우리의 트리.jpg", type: "image", src: "", caption: "올해의 우리" }
       ]
+    },
+    video: {
+      title: "겨울 영상",
+      files: [{ name: "우리의 크리스마스.mp4", type: "video", src: "", caption: "함께 보낸 겨울의 순간" }]
     },
     record: {
       title: "겨울 플레이리스트",

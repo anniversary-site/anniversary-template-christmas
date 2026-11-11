@@ -151,6 +151,31 @@
   // ---------- desktop ----------
   var MAP_WIDTH = 1585, MAP_HEIGHT = 992;
   var camera = { scale: 1, x: 0, y: 0 };
+  var selectedMapHighlight = null, requestedMapHighlight = null, mapHighlightCache = Object.create(null);
+  function showMapHighlight(path) {
+    var layer = $("#market-highlight-map");
+    requestedMapHighlight = path || null;
+    if (!path) {
+      layer.classList.remove("is-visible");
+      return;
+    }
+    if (mapHighlightCache[path] === true) {
+      layer.style.backgroundImage = 'url("' + path + '")';
+      layer.classList.add("is-visible");
+      return;
+    }
+    if (mapHighlightCache[path]) return;
+    var image = new Image();
+    mapHighlightCache[path] = image;
+    image.onload = function () {
+      mapHighlightCache[path] = true;
+      if (requestedMapHighlight === path) {
+        layer.style.backgroundImage = 'url("' + path + '")';
+        layer.classList.add("is-visible");
+      }
+    };
+    image.src = path;
+  }
   function updateCamera() {
     var desktop = $("#desktop"), world = $(".market-world"), player = $("#player");
     if (!desktop || !world || !player || desktop.hidden) return;
@@ -178,12 +203,19 @@
       d.setAttribute("role", "button");
       d.setAttribute("tabindex", "0");
       d.setAttribute("aria-label", ic.label + " 가판대 열기");
+      d.title = ic.label;
       var label = el("span", "lb"); label.textContent = ic.label;
       d.appendChild(label);
       var open = function () { launch(ic); };
+      d.addEventListener("mouseenter", function () { showMapHighlight(ic.highlight); });
+      d.addEventListener("mouseleave", function () { showMapHighlight(selectedMapHighlight); });
+      d.addEventListener("focus", function () { showMapHighlight(ic.highlight); });
+      d.addEventListener("blur", function () { showMapHighlight(selectedMapHighlight); });
       d.addEventListener("click", function () {
         document.querySelectorAll(".dicon.sel").forEach(function (x) { x.classList.remove("sel"); });
         d.classList.add("sel");
+        selectedMapHighlight = ic.highlight;
+        showMapHighlight(selectedMapHighlight);
         walkTo(d);
         window.setTimeout(open, 180);
       });
@@ -195,6 +227,8 @@
     dt.addEventListener("click", function (e) {
       if (e.target === dt || e.target === world || e.target === iconGrid) {
         document.querySelectorAll(".dicon.sel").forEach(function (x) { x.classList.remove("sel"); });
+        selectedMapHighlight = null;
+        showMapHighlight(null);
         movePlayer(e.clientX, e.clientY);
       }
     });
@@ -255,13 +289,32 @@
 
   function launch(ic) {
     if (ic.type === "information") openInformation(ic.windowTitle);
+    else if (ic.type === "gallery") openGalleryChoice();
     else if (ic.type === "folder") openFolder(ic.ref);
     else if (ic.type === "note") openNote(ic.ref);
     else if (ic.type === "gift") $("#memo-add").click();
     else if (ic.type === "photobooth") openBooth();
     else if (ic.type === "paint") openPaint();
+    else if (ic.type === "game") openMinesweeper();
     else if (ic.type === "link") window.open(ic.url, "_blank", "noopener");
     else if (ic.type === "trash") alert("휴지통은 비어 있어요. 우리 추억은 하나도 버리지 않았거든요.");
+  }
+
+  function openGalleryChoice() {
+    var chooser = createWin("photo-gallery-choice", "사진관", { w: 390, h: 250 }, function (w, body) {
+      var content = el("div", "content gallery-choice");
+      content.appendChild(el("p", "gallery-choice-title", "무엇을 볼까요?"));
+      [["📷 사진 보기", "photo"], ["🎞️ 영상 보기", "video"]].forEach(function (choice) {
+        var button = el("button", "btn gallery-choice-button", choice[0]);
+        button.onclick = function () {
+          w.el.querySelector(".titlebar .tbtn:last-child").click();
+          openFolder(choice[1]);
+        };
+        content.appendChild(button);
+      });
+      body.appendChild(content);
+    });
+    return chooser;
   }
 
   // ---------- window manager ----------

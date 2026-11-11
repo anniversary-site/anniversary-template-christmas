@@ -851,14 +851,18 @@ select {
   image-rendering: pixelated;
   will-change: transform;
 }
-.market-world::before {
-  content: "";
+.market-highlight-map {
   position: absolute;
-  z-index: 2;
+  z-index: 1;
   inset: 0;
+  opacity: 0;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  transition: opacity .14s ease;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(16, 28, 26, .18), transparent 24%, transparent 74%, rgba(16, 28, 26, .16));
 }
+.market-highlight-map.is-visible { opacity: 1; }
 
 #desktop.winter-market .desktop-icons {
   position: absolute;
@@ -879,75 +883,15 @@ select {
   filter: none;
 }
 
-#desktop.winter-market .dicon[data-market-id="photo"] { left: 0%; top: 12%; width: 25%; height: 39%; }
+#desktop.winter-market .dicon[data-market-id="photo"] { left: 0%; top: 12%; width: 22%; height: 38%; }
 #desktop.winter-market .dicon[data-market-id="letter"] { left: 24%; top: 4%; width: 22%; height: 35%; }
 #desktop.winter-market .dicon[data-market-id="music"] { left: 65%; top: 5%; width: 23%; height: 32%; }
-#desktop.winter-market .dicon[data-market-id="gift"] { left: 78%; top: 29%; width: 22%; height: 36%; z-index: 1; }
+#desktop.winter-market .dicon[data-market-id="market"] { left: 78%; top: 29%; width: 22%; height: 36%; z-index: 1; }
 #desktop.winter-market .dicon[data-market-id="tree"] { left: 39%; top: 5%; width: 23%; height: 38%; }
-
-#desktop.winter-market .dicon::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  transition: opacity .16s ease, filter .16s ease, transform .16s ease;
-  pointer-events: none;
-}
-
-#desktop.winter-market .dicon[data-market-id="photo"]::before {
-  background-image: url("assets/highlights/photo-booth.svg");
-}
-#desktop.winter-market .dicon[data-market-id="letter"]::before {
-  background-image: url("assets/highlights/post-office.svg");
-}
-#desktop.winter-market .dicon[data-market-id="music"]::before {
-  background-image: url("assets/highlights/carol-stage.svg");
-}
-#desktop.winter-market .dicon[data-market-id="gift"]::before {
-  background-image: url("assets/highlights/gingerbread-stall.svg");
-}
-#desktop.winter-market .dicon[data-market-id="tree"]::before {
-  background-image: url("assets/highlights/christmas-tree.svg");
-}
-#desktop.winter-market .dicon[data-market-id="photo"]::after {
-  clip-path: polygon(0 34%, 16% 10%, 43% 0, 91% 20%, 100% 49%, 95% 100%, 0 100%);
-}
-#desktop.winter-market .dicon[data-market-id="letter"]::after {
-  clip-path: polygon(0 43%, 13% 15%, 52% 0, 92% 22%, 100% 100%, 0 100%);
-}
-#desktop.winter-market .dicon[data-market-id="music"]::after {
-  clip-path: polygon(0 43%, 24% 13%, 59% 0, 96% 23%, 100% 100%, 0 100%);
-}
-#desktop.winter-market .dicon[data-market-id="gift"]::after {
-  clip-path: polygon(0 46%, 42% 4%, 71% 0, 100% 23%, 100% 100%, 0 100%);
-}
-#desktop.winter-market .dicon[data-market-id="tree"]::after {
-  clip-path: polygon(45% 0, 60% 10%, 55% 22%, 70% 35%, 64% 48%, 78% 60%, 72% 78%, 100% 100%, 0 100%, 28% 78%, 20% 60%, 35% 47%, 28% 33%, 44% 21%, 38% 10%);
-}
-#desktop.winter-market .dicon::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity .16s ease;
-  pointer-events: none;
-  backdrop-filter: brightness(1.16) saturate(1.12);
-}
-#desktop.winter-market .dicon:hover::before,
-#desktop.winter-market .dicon:focus-visible::before,
-#desktop.winter-market .dicon.sel::before {
-  opacity: 1;
-  filter: drop-shadow(0 0 5px rgba(255, 235, 187, .86)) drop-shadow(0 0 12px rgba(244, 184, 92, .48));
-  transform: scale(1.012);
-}
-#desktop.winter-market .dicon:hover::after,
-#desktop.winter-market .dicon:focus-visible::after,
-#desktop.winter-market .dicon.sel::after {
-  opacity: .6;
-}
+#desktop.winter-market .dicon[data-market-id="booth"] { left: 19%; top: 33%; width: 10%; height: 17%; z-index: 2; }
+#desktop.winter-market .dicon[data-market-id="internet"] { left: 50%; top: 82%; width: 8%; height: 14%; z-index: 2; }
+#desktop.winter-market .dicon[data-market-id="trash"] { left: 64%; top: 29%; width: 8%; height: 12%; z-index: 2; }
+#desktop.winter-market .dicon[data-market-id="game"] { left: 66%; top: 59%; width: 12%; height: 16%; z-index: 2; }
 
 #desktop.winter-market .dicon .lb {
   position: absolute;
@@ -965,8 +909,18 @@ select {
   pointer-events: none;
 }
 
-#desktop.winter-market .dicon.sel .lb { background: #9b4536; color: #fff7e4; }
-#desktop.winter-market .dicon .ic { display: none; }
+#desktop.winter-market .dicon:hover .lb,
+#desktop.winter-market .dicon:focus-visible .lb,
+#desktop.winter-market .dicon.sel .lb {
+  border-color: #fff8dd;
+  background: #9b4536;
+  color: #fff7e4;
+  box-shadow: 0 0 8px #fff1ca99;
+}
+
+.gallery-choice { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+.gallery-choice-title { margin: 0 0 4px; color: #315247; font: 14px "Departure Mono", monospace; }
+.gallery-choice-button { min-width: 190px; padding: 9px 12px; }
 
 .market-banner {
   position: absolute;
