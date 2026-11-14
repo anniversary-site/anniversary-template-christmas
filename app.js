@@ -296,7 +296,7 @@
     }
     return { x: MAP_WIDTH * .5, y: MAP_HEIGHT * .62 };
   }
-  function setPlayer(left, top, snapToWalkable) {
+  function setPlayer(left, top, snapToWalkable, persist) {
     var player = $("#player");
     if (!player) return;
     var x = Math.max(0, Math.min(MAP_WIDTH, left / 100 * MAP_WIDTH));
@@ -309,7 +309,9 @@
     top = y / MAP_HEIGHT * 100;
     player.style.left = left + "%";
     player.style.top = top + "%";
-    try { localStorage.setItem("urluv-winter-player:" + (site.key || "demo"), JSON.stringify({ left: left, top: top })); } catch (e) {}
+    if (persist !== false) {
+      try { localStorage.setItem("urluv-winter-player:" + (site.key || "demo"), JSON.stringify({ left: left, top: top })); } catch (e) {}
+    }
     updateCamera();
     return true;
   }
@@ -330,35 +332,112 @@
     setPlayer(start.left, start.top, true);
     updateCamera();
     window.addEventListener("resize", updateCamera);
-    function step(dx, dy) {
+    var held = Object.create(null), velocity = { x: 0, y: 0 }, frame = 0, previousTime = 0;
+    var directions = {
+      ArrowUp: "up", KeyW: "up", ArrowDown: "down", KeyS: "down",
+      ArrowLeft: "left", KeyA: "left", ArrowRight: "right", KeyD: "right"
+    };
+    var fallbackDirections = {
+      ArrowUp: "up", w: "up", W: "up", ArrowDown: "down", s: "down", S: "down",
+      ArrowLeft: "left", a: "left", A: "left", ArrowRight: "right", d: "right", D: "right"
+    };
+    function savePosition() {
       var left = parseFloat(player.style.left) || 50, top = parseFloat(player.style.top) || 62;
-      var x = left / 100 * MAP_WIDTH, y = top / 100 * MAP_HEIGHT;
-      var distance = Math.sqrt(dx * dx + dy * dy), steps = Math.ceil(distance / 8);
+      try { localStorage.setItem("urluv-winter-player:" + (site.key || "demo"), JSON.stringify({ left: left, top: top })); } catch (e) {}
+    }
+    function approach(value, target, amount) {
+      if (value < target) return Math.min(target, value + amount);
+      return Math.max(target, value - amount);
+    }
+    function canTravel(x, y, nextX, nextY) {
+      var distance = Math.hypot(nextX - x, nextY - y), steps = Math.max(1, Math.ceil(distance / 5));
       for (var i = 1; i <= steps; i++) {
-        if (!canOccupy(x + dx * i / steps, y + dy * i / steps)) return;
+        if (!canOccupy(x + (nextX - x) * i / steps, y + (nextY - y) * i / steps)) return false;
       }
-      player.classList.remove("facing-up", "facing-down", "facing-left", "facing-right");
-      player.classList.add(Math.abs(dx) > Math.abs(dy)
-        ? (dx < 0 ? "facing-left" : "facing-right")
-        : (dy < 0 ? "facing-up" : "facing-down"));
-      setPlayer(left + dx / MAP_WIDTH * 100, top + dy / MAP_HEIGHT * 100);
-      player.classList.add("walking"); window.clearTimeout(player.walkTimer);
-      player.walkTimer = window.setTimeout(function () { player.classList.remove("walking"); }, 180);
+      return true;
+    }
+    function animateMovement(time) {
+      if (!previousTime) previousTime = time;
+      var dt = Math.min(.04, (time - previousTime) / 1000);
+      previousTime = time;
+      if (dt === 0) { frame = requestAnimationFrame(animateMovement); return; }
+      var x = (parseFloat(player.style.left) || 50) / 100 * MAP_WIDTH;
+      var y = (parseFloat(player.style.top) || 62) / 100 * MAP_HEIGHT;
+      var horizontal = (held.right ? 1 : 0) - (held.left ? 1 : 0);
+      var vertical = (held.down ? 1 : 0) - (held.up ? 1 : 0);
+      var magnitude = Math.hypot(horizontal, vertical);
+      if (magnitude) { horizontal /= magnitude; vertical /= magnitude; }
+      var maxSpeed = 185, acceleration = 680, braking = 900;
+      var targetX = horizontal * maxSpeed, targetY = vertical * maxSpeed;
+      velocity.x = approach(velocity.x, targetX, (magnitude ? acceleration : braking) * dt);
+      velocity.y = approach(velocity.y, targetY, (magnitude ? acceleration : braking) * dt);
+      var nextX = x + velocity.x * dt, nextY = y + velocity.y * dt;
+      var moved = false;
+      if (canTravel(x, y, nextX, y)) { x = nextX; moved = moved || Math.abs(velocity.x) > .1; }
+      else velocity.x = 0;
+      if (canTravel(x, y, x, nextY)) { y = nextY; moved = moved || Math.abs(velocity.y) > .1; }
+      else velocity.y = 0;
+
+      if (magnitude) {
+        player.classList.remove("facing-up", "facing-down", "facing-left", "facing-right");
+        player.classList.add(Math.abs(horizontal) > Math.abs(vertical)
+          ? (horizontal < 0 ? "facing-left" : "facing-right")
+          : (vertical < 0 ? "facing-up" : "facing-down"));
+      }
+      if (moved) {
+        setPlayer(x / MAP_WIDTH * 100, y / MAP_HEIGHT * 100, false, false);
+        player.classList.add("walking");
+      }
+      var stillMoving = Math.abs(velocity.x) > .5 || Math.abs(velocity.y) > .5;
+      if (stillMoving || (magnitude && moved)) {
+        frame = requestAnimationFrame(animateMovement);
+      } else {
+        frame = 0; previousTime = 0;
+        player.classList.remove("walking");
+        savePosition();
+      }
+    }
+    function startMovement() {
+      if (!frame) { previousTime = 0; frame = requestAnimationFrame(animateMovement); }
+    }
+    function setDirection(direction, active) {
+      if (active) {
+        if (held[direction]) return;
+        held[direction] = true;
+        startMovement();
+      } else {
+        delete held[direction];
+        if (!frame && (Math.abs(velocity.x) > .5 || Math.abs(velocity.y) > .5)) startMovement();
+      }
     }
     document.addEventListener("keydown", function (event) {
       if (event.target.closest("input,textarea,select,[contenteditable=true]") || $("#desktop").hidden) return;
-      var move = {
-        ArrowUp:[0,-44], ArrowDown:[0,44], ArrowLeft:[-44,0], ArrowRight:[44,0],
-        KeyW:[0,-44], KeyS:[0,44], KeyA:[-44,0], KeyD:[44,0]
-      }[event.code] || { ArrowUp:[0,-44], ArrowDown:[0,44], ArrowLeft:[-44,0], ArrowRight:[44,0],
-        w:[0,-44], W:[0,-44], s:[0,44], S:[0,44], a:[-44,0], A:[-44,0], d:[44,0], D:[44,0] }[event.key];
-      if (!move) return;
-      event.preventDefault(); step(move[0], move[1]);
+      var direction = directions[event.code] || fallbackDirections[event.key];
+      if (!direction) return;
+      event.preventDefault(); setDirection(direction, true);
+    });
+    document.addEventListener("keyup", function (event) {
+      var direction = directions[event.code] || fallbackDirections[event.key];
+      if (direction) setDirection(direction, false);
+    });
+    window.addEventListener("blur", function () {
+      held = Object.create(null);
+      if (!frame && (Math.abs(velocity.x) > .5 || Math.abs(velocity.y) > .5)) startMovement();
     });
     document.querySelectorAll(".market-dpad [data-move]").forEach(function (button) {
-      button.addEventListener("click", function () {
-        var move = { up:[0,-60],down:[0,60],left:[-60,0],right:[60,0] }[button.dataset.move];
-        step(move[0], move[1]);
+      var direction = button.dataset.move;
+      button.addEventListener("pointerdown", function (event) {
+        event.preventDefault();
+        if (button.setPointerCapture) button.setPointerCapture(event.pointerId);
+        setDirection(direction, true);
+      });
+      ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (name) {
+        button.addEventListener(name, function () { setDirection(direction, false); });
+      });
+      button.addEventListener("click", function (event) {
+        if (event.detail !== 0) return;
+        setDirection(direction, true);
+        window.setTimeout(function () { setDirection(direction, false); }, 140);
       });
     });
   }
@@ -377,20 +456,7 @@
   }
 
   function openGalleryChoice() {
-    var chooser = createWin("photo-gallery-choice", "사진관", { w: 390, h: 250 }, function (w, body) {
-      var content = el("div", "content gallery-choice");
-      content.appendChild(el("p", "gallery-choice-title", "무엇을 볼까요?"));
-      [["📷 사진 보기", "photo"], ["🎞️ 영상 보기", "video"]].forEach(function (choice) {
-        var button = el("button", "btn gallery-choice-button", choice[0]);
-        button.onclick = function () {
-          w.el.querySelector(".titlebar .tbtn:last-child").click();
-          openFolder(choice[1]);
-        };
-        content.appendChild(button);
-      });
-      body.appendChild(content);
-    });
-    return chooser;
+    return openFolder("gallery");
   }
 
   // ---------- window manager ----------
@@ -521,8 +587,8 @@
     });
   }
 
-  var ICON = { game: "💗", text: "📄", image: "🖼️", video: "🎞️", audio: "🎵", folder: "📁" };
-  var FILE_ICON = { game: "assets/icons/heart.svg", text: "assets/icons/letter.svg", image: "assets/icons/file.svg", video: "assets/icons/video.svg", audio: "assets/icons/music.svg" };
+  var ICON = { game: "💗", text: "📄", image: "🖼️", video: "🎞️", audio: "🎵", folder: "" };
+  var FILE_ICON = { game: "assets/icons/heart.svg", text: "assets/icons/letter.svg", image: "assets/icons/file.svg", photo: "assets/icons/photo.svg", video: "assets/icons/video.svg", audio: "assets/icons/music.svg", folder: "assets/icons/folder.svg" };
   function openFolder(ref) {
     if (ref === "record") return openMusic();
     var f = S.folders[ref];
@@ -532,7 +598,7 @@
       f.files.forEach(function (file) {
         var d = el("div", "file" + (file.type === "game" ? " game-file" : ""));
         var iconBox = el("div", "ic");
-        var iconSrc = file.type === "folder" && ref.indexOf("photo") === 0 ? "assets/icons/file.svg" : FILE_ICON[file.type];
+        var iconSrc = FILE_ICON[file.icon] || FILE_ICON[file.type];
         if (iconSrc) {
           var iconImage = el("img");
           iconImage.src = iconSrc;

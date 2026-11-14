@@ -33,8 +33,15 @@ window.SITE = {
     letter: { title: "크리스마스 편지", text: "올해도 함께여서 참 좋았어.\n\n우리의 겨울을 오래 간직하자.\n\n메리 크리스마스!" }
   },
   folders: {
+    gallery: {
+      title: "사진관",
+      files: [
+        { name: "사진", type: "folder", icon: "photo", ref: "photo" },
+        { name: "영상", type: "folder", icon: "video", ref: "video" }
+      ]
+    },
     photo: {
-      title: "겨울 사진관",
+      title: "사진",
       files: [
         { name: "첫눈.jpg", type: "image", src: "", caption: "첫눈 오던 날" },
         { name: "마켓 산책.jpg", type: "image", src: "", caption: "마켓을 걷던 밤" },
@@ -42,7 +49,7 @@ window.SITE = {
       ]
     },
     video: {
-      title: "겨울 영상",
+      title: "영상",
       files: [{ name: "우리의 크리스마스.mp4", type: "video", src: "", caption: "함께 보낸 겨울의 순간" }]
     },
     record: {
