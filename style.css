@@ -719,12 +719,27 @@ select {
 }
 
 .pixel-ui-gift {
-  width: 18px;
-  height: 18px;
-  margin-right: 4px;
-  vertical-align: -4px;
+  width: 14px;
+  height: 14px;
+  margin: 0;
   object-fit: contain;
   image-rendering: pixelated;
+}
+
+#taskbar #start,
+#taskbar #memo-add,
+#taskbar #memo-toggle {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 26px;
+  min-height: 26px;
+  padding: 0 9px;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 #memo-placement {
@@ -1062,7 +1077,7 @@ select {
 
 #memo-placement { background: rgba(22, 42, 34, .28); }
 #memo-placement p { background: #fff1cf; border-color: #9b4536; color: #493426; }
-.memo-preview { border-color: #e8c66e; background: rgba(255, 241, 207, .76); color: #493426; font: 13px "Departure Mono", monospace; }
+.memo-preview { border: 0; background: transparent; padding: 0; box-shadow: none; }
 
 #taskbar { background: #ece8dc; border-color: #fff; color: #2e3e34; }
 #taskbar .sep { background: #8e744e; }
