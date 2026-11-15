@@ -153,6 +153,24 @@
         return call(memoPath + "/" + encodeURIComponent(id), { method: "DELETE", token: activeToken });
       }
     },
+    // 실시간 마켓은 비밀번호로 연 납품 사이트에서만 연결합니다. 비밀번호 토큰은 WebSocket 첫 메시지로 보냅니다.
+    connectMarketPresence: function (visitorId, avatar, state, onMessage) {
+      if (!key || !activeToken || previewToken || typeof WebSocket === "undefined") return null;
+      var address = new URL(API_URL + "/sites/" + key + "/presence");
+      address.protocol = address.protocol === "https:" ? "wss:" : "ws:";
+      var socket = new WebSocket(address.href);
+      socket.addEventListener("open", function () {
+        if (socket.readyState !== WebSocket.OPEN) return;
+        socket.send(JSON.stringify({
+          type: "join", token: activeToken, visitorId: visitorId, avatar: avatar,
+          x: state.x, y: state.y, facing: state.facing, walking: state.walking
+        }));
+      });
+      socket.addEventListener("message", function (event) {
+        try { if (onMessage) onMessage(JSON.parse(event.data)); } catch (e) {}
+      });
+      return socket;
+    },
     // 운영자 미리보기면 비밀번호 없이 내용을 채웁니다. 미리보기가 아니면 false.
     previewing: !!previewToken,
     preview: function () {

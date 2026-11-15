@@ -1017,6 +1017,7 @@ select {
 
 .market-banner strong { color: #f6d782; white-space: nowrap; }
 .market-banner span { color: #ede1c5; }
+.market-banner .market-online { padding: 2px 5px; border: 1px solid #9c956e; background: #315247; color: #f6d782; white-space: nowrap; }
 .market-banner kbd { padding: 2px 4px; border: 1px solid #9c956e; background: #36483d; color: #f5e9c5; font: 9px monospace; white-space: nowrap; }
 
 #player {
@@ -1040,6 +1041,25 @@ select {
 #player.facing-right .avatar-sprite { background-position-y: 100%; }
 #player.walking .avatar-sprite { animation: avatar-walk .28s steps(1, end) infinite; }
 @keyframes avatar-walk { to { background-position-x: 100%; } }
+
+#other-players { position: absolute; z-index: 4; inset: 0; pointer-events: none; }
+#other-players .remote-player {
+  position: absolute;
+  width: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -80%);
+  transition: left .12s linear, top .12s linear;
+  filter: drop-shadow(2px 3px 1px #17201c99);
+}
+#other-players .avatar-sprite { width: 54px; height: 66px; margin-bottom: -2px; background-repeat: no-repeat; background-size: 200% 400%; background-position: 0 0; image-rendering: pixelated; }
+#other-players .player-name { margin-top: 0; padding: 1px 5px; border: 1px solid #f2dfad; background: #26372f; color: #fff3d2; font: 9px "Departure Mono", monospace; white-space: nowrap; }
+#other-players .facing-down .avatar-sprite { background-position-y: 0; }
+#other-players .facing-up .avatar-sprite { background-position-y: 33.3333%; }
+#other-players .facing-left .avatar-sprite { background-position-y: 66.6667%; }
+#other-players .facing-right .avatar-sprite { background-position-y: 100%; }
+#other-players .walking .avatar-sprite { animation: avatar-walk .28s steps(1, end) infinite; }
 
 .market-dpad { display: none; }
 
@@ -1088,11 +1108,14 @@ select {
 
 @media (max-width: 640px) {
   .market-banner { top: 6px; left: 6px; padding: 6px; gap: 5px; font-size: 9px; }
-  .market-banner span, .market-banner kbd { display: none; }
+  .market-banner span:not(.market-online), .market-banner kbd { display: none; }
   #desktop.winter-market .dicon .lb { font-size: 11px; padding: 3px 6px; }
   #player { width: 34px; }
   #player .avatar-sprite { width: 44px; height: 54px; }
   #player .player-name { font-size: 8px; }
+  #other-players .remote-player { width: 34px; }
+  #other-players .avatar-sprite { width: 44px; height: 54px; }
+  #other-players .player-name { font-size: 8px; }
   .market-dpad {
     position: absolute;
     z-index: 5;

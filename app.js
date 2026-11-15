@@ -51,6 +51,23 @@
   }
 
   var site = window.UrluvSite || { key: null };
+  var marketFacing = "down";
+  var marketWalking = false;
+  var lastPresencePublish = 0;
+
+  function publishMarketPresence(force) {
+    var player = $("#player");
+    if (!player || !window.MarketPresence) return;
+    var now = Date.now();
+    if (!force && now - lastPresencePublish < 100) return;
+    lastPresencePublish = now;
+    window.MarketPresence.publish({
+      x: parseFloat(player.style.left) || 50,
+      y: parseFloat(player.style.top) || 62,
+      facing: marketFacing,
+      walking: marketWalking
+    }, !!force);
+  }
 
   function wrongPassword(message) {
     $("#login-err").textContent = message || "Wrong Password!";
@@ -88,8 +105,18 @@
     $("#desktop").hidden = false;
     $("#taskbar").hidden = false;
     buildDesktop();
-    selectAvatar();
+    var avatar = selectAvatar();
     window.DesktopMemos.enter();
+    if (window.MarketPresence) {
+      window.MarketPresence.start(avatar, function () {
+        return {
+          x: parseFloat(document.querySelector("#player").style.left) || 50,
+          y: parseFloat(document.querySelector("#player").style.top) || 62,
+          facing: marketFacing,
+          walking: marketWalking
+        };
+      });
+    }
     tick();
     if (S.siteMode !== "christmas" && !openWins.information) openInformation();
   }
@@ -100,6 +127,7 @@
     var avatar = Math.floor(Math.random() * 4) + 1;
     sprite.dataset.avatar = String(avatar);
     sprite.style.backgroundImage = 'url("assets/sprites/market-avatar-' + avatar + '.png' + (avatar === 3 ? '?v=2' : '') + '")';
+    return avatar;
   }
   if (site.key && site.previewing) {
     // 운영자 미리보기: 비밀번호 화면을 건너뛰고 바로 엽니다.
@@ -313,6 +341,10 @@
       try { localStorage.setItem("urluv-winter-player:" + (site.key || "demo"), JSON.stringify({ left: left, top: top })); } catch (e) {}
     }
     updateCamera();
+    if (snapToWalkable) {
+      marketWalking = false;
+      publishMarketPresence(true);
+    }
     return true;
   }
   function movePlayer(clientX, clientY) {
@@ -328,7 +360,20 @@
     if (playerInstalled) return;
     playerInstalled = true;
     var player = $("#player"), start = { left: 50, top: 62 };
-    try { start = JSON.parse(localStorage.getItem("urluv-winter-player:" + (site.key || "demo")) || "null") || start; } catch (e) {}
+    try {
+      var saved = JSON.parse(localStorage.getItem("urluv-winter-player:" + (site.key || "demo")) || "null");
+      if (saved) start = saved;
+      else if (site.key) {
+        for (var attempt = 0; attempt < 30; attempt++) {
+          var spawnX = MAP_WIDTH * (.43 + Math.random() * .14);
+          var spawnY = MAP_HEIGHT * (.56 + Math.random() * .14);
+          if (canOccupy(spawnX, spawnY)) {
+            start = { left: spawnX / MAP_WIDTH * 100, top: spawnY / MAP_HEIGHT * 100 };
+            break;
+          }
+        }
+      }
+    } catch (e) {}
     setPlayer(start.left, start.top, true);
     updateCamera();
     window.addEventListener("resize", updateCamera);
@@ -379,13 +424,16 @@
       else velocity.y = 0;
 
       if (magnitude) {
+        marketFacing = Math.abs(horizontal) > Math.abs(vertical)
+          ? (horizontal < 0 ? "left" : "right")
+          : (vertical < 0 ? "up" : "down");
         player.classList.remove("facing-up", "facing-down", "facing-left", "facing-right");
-        player.classList.add(Math.abs(horizontal) > Math.abs(vertical)
-          ? (horizontal < 0 ? "facing-left" : "facing-right")
-          : (vertical < 0 ? "facing-up" : "facing-down"));
+        player.classList.add("facing-" + marketFacing);
       }
       if (moved) {
         setPlayer(x / MAP_WIDTH * 100, y / MAP_HEIGHT * 100, false, false);
+        marketWalking = true;
+        publishMarketPresence(false);
         player.classList.add("walking");
       }
       var stillMoving = Math.abs(velocity.x) > .5 || Math.abs(velocity.y) > .5;
@@ -394,6 +442,10 @@
       } else {
         frame = 0; previousTime = 0;
         player.classList.remove("walking");
+        if (marketWalking) {
+          marketWalking = false;
+          publishMarketPresence(true);
+        }
         savePosition();
       }
     }

@@ -58,9 +58,12 @@ window.SITE = {
     }
   },
   music: {
-    title: "겨울, 그리고 우리",
+    title: "크리스마스 캐럴",
     tracks: [
-      { title: "우리의 크리스마스 노래", artist: "함께 듣는 음악", url: "https://www.youtube.com/watch?v=hGqYdubpcCM" }
+      { title: "Jingle Bells", artist: "Christmas Songs and Carols - Love to Sing", url: "https://www.youtube.com/watch?v=UPeol7oEzrw" },
+      { title: "Deck the Halls", artist: "Christmas Songs and Carols - Love to Sing", url: "https://www.youtube.com/watch?v=SIFqnEoctI4" },
+      { title: "We Wish You a Merry Christmas", artist: "Christmas Songs and Carols - Love to Sing", url: "https://www.youtube.com/watch?v=g-OF7KGyDis" },
+      { title: "Silent Night", artist: "Christmas Songs and Carols - Love to Sing", url: "https://www.youtube.com/watch?v=nEH7_2c644Q" }
     ]
   },
   frames: [

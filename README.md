@@ -9,6 +9,7 @@
 - 사진관, 편지 우체국, 캐럴 무대, 선물 가판대, 크리스마스 트리가 기존 바탕화면 아이콘을 대신합니다.
 - 가판대를 누르면 기존 Windows 스타일 콘텐츠 창이 열립니다.
 - 선물 가판대 또는 작업표시줄의 `선물 남기기`를 누른 다음 맵을 클릭하면 방문자 메시지를 선물 카드로 남깁니다.
+- 같은 고객 사이트에 로그인한 방문자는 마켓에서 서로의 캐릭터를 실시간으로 볼 수 있습니다. 위치는 접속 중에만 유지됩니다.
 - 고객 사이트는 기존 주문 API의 사진·캡션·편지·음악·특별한 날/장소 데이터와 사이트별 메모 API를 사용합니다.
 
 캐릭터 위치와 데모 선물 카드는 브라우저 로컬 저장소를 사용합니다. 주문 사이트에서 전달한 `siteKey`로 접속하면 선물 카드는 백엔드에 저장되어 다른 기기에서도 보입니다. 운영자 미리보기 토큰은 읽기 전용입니다.
@@ -25,6 +26,6 @@ python3 -m http.server 8000
 
 ## Deployment
 
-Vercel의 SPA rewrite는 12자리 사이트 키 주소를 `index.html`로 보냅니다. 고객 사이트 링크는 백엔드의 `app.site.template-urls[3]` 설정으로 정합니다. 별도 도메인에 배포한 뒤 API 서버의 `SITE_URL_TEMPLATE_3` 값을 해당 호스트로 맞춰야 합니다. 이 저장소만으로 DNS, 도메인 인증서, 백엔드 납품 링크 설정이 자동으로 바뀌지는 않습니다.
+Vercel의 SPA rewrite는 12자리 사이트 키 주소를 `index.html`로 보냅니다. 이 템플릿은 `https://santa.urluv.shop`에 배포되어 있고, 고객 사이트 주소는 `https://santa.urluv.shop/{siteKey}`입니다. API 서버는 `SITE_URL_TEMPLATE_3=https://santa.urluv.shop`로 설정합니다.
 
 `urluv-site.js`의 API 주소는 개발에서 `localhost:8080`, 운영에서 현재 URLUV API CloudFront 주소를 사용합니다.
