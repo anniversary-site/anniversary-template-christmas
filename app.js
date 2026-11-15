@@ -647,18 +647,31 @@
     createWin("folder:" + ref, f.title, { w: 520, h: 400 }, function (w, b) {
       b.appendChild(el("div", "addr", "/" + esc(f.title) + "/"));
       var c = el("div", "content"); var list = el("div", "files");
-      f.files.forEach(function (file) {
+      var fileSignature = null;
+      function drawFiles(files) {
+        var signature = files.map(function (file) { return [file.mediaId || "", file.src || "", file.name].join("|"); }).join(";");
+        if (signature === fileSignature) return;
+        fileSignature = signature;
+        list.replaceChildren();
+        files.forEach(function (file) {
         var d = el("div", "file" + (file.type === "game" ? " game-file" : ""));
         var iconBox = el("div", "ic");
-        var iconSrc = FILE_ICON[file.icon] || FILE_ICON[file.type];
-        if (iconSrc) {
+        if (file.mediaId && file.src) {
           var iconImage = el("img");
-          iconImage.src = iconSrc;
+          iconImage.src = file.src;
+          iconImage.className = "media-thumb";
           iconImage.alt = "";
           iconImage.draggable = false;
           iconBox.appendChild(iconImage);
         } else {
-          iconBox.textContent = ICON[file.type] || "";
+          var iconSrc = FILE_ICON[file.icon] || FILE_ICON[file.type];
+          if (iconSrc) {
+            var iconImageDefault = el("img");
+            iconImageDefault.src = iconSrc;
+            iconImageDefault.alt = "";
+            iconImageDefault.draggable = false;
+            iconBox.appendChild(iconImageDefault);
+          } else iconBox.textContent = ICON[file.type] || "";
         }
         d.append(iconBox, document.createTextNode(file.name));
         d.addEventListener("click", function () {
@@ -667,9 +680,102 @@
           if (matchMedia("(pointer:coarse)").matches) viewFile(file);
         });
         d.addEventListener("dblclick", function () { viewFile(file); });
+          if (file.mediaId && !(window.UrluvSite && window.UrluvSite.previewing)) {
+          var remove = el("button", "btn file-delete", "삭제");
+          remove.onclick = function (event) {
+            event.stopPropagation();
+            if (!window.confirm("이 사진을 삭제할까요?")) return;
+            remove.disabled = true;
+            window.UrluvSite.media.remove(file.mediaId).then(function () {
+              loadFiles();
+              window.dispatchEvent(new Event("urluv-site-media-updated"));
+            }).catch(function () {
+              remove.disabled = false;
+              alert("파일을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.");
+            });
+          };
+          d.appendChild(remove);
+        }
         list.appendChild(d);
       });
+      }
+      var baseFiles = f.files.slice();
+      function loadFiles() {
+        if (ref !== "photo" || !window.UrluvSite || !window.UrluvSite.media) {
+          drawFiles(baseFiles);
+          return Promise.resolve();
+        }
+        return window.UrluvSite.media.list().then(function (files) {
+          var captured = files.filter(function (m) { return m.type === "PHOTOBOOTH"; }).map(function (m, i) {
+            return { name: "포토부스 " + String(i + 1).padStart(2, "0") + ".png", type: "image", src: m.url, caption: "포토부스에서 찍은 사진", mediaId: m.id };
+          });
+          drawFiles(baseFiles.concat(captured));
+        }).catch(function () { drawFiles(baseFiles); });
+      }
       c.appendChild(list); b.appendChild(c);
+      loadFiles();
+      var hasMediaApi = ref === "photo" && window.UrluvSite && window.UrluvSite.media;
+      var refresh = hasMediaApi ? window.setInterval(loadFiles, 5000) : null;
+      if (hasMediaApi) window.addEventListener("urluv-site-media-updated", loadFiles);
+      w.onclose = function () {
+        if (refresh) window.clearInterval(refresh);
+        if (hasMediaApi) window.removeEventListener("urluv-site-media-updated", loadFiles);
+      };
+    });
+  }
+
+  function openPaint() {
+    var api = window.UrluvSite && window.UrluvSite.media;
+    createWin("paint-gallery", "크리스마스 카드", { w: 520, h: 400 }, function (w, b) {
+      b.appendChild(el("div", "addr", "/크리스마스 마켓/카드/"));
+      var actions = el("div", "generated-media-actions");
+      var create = el("button", "btn", "새로 그리기");
+      var status = el("span", "generated-media-status", "그림은 최대 50개까지 저장할 수 있어요.");
+      if (window.UrluvSite && window.UrluvSite.previewing) create.disabled = true;
+      create.onclick = openPaintCanvas;
+      actions.append(create, status); b.appendChild(actions);
+      var c = el("div", "content"); var list = el("div", "files"); c.appendChild(list); b.appendChild(c);
+      var drawingSignature = null;
+      function load() {
+        if (!api) { list.replaceChildren(); status.textContent = "주문 사이트에서 그림을 저장하면 여기에 보여요."; return Promise.resolve(); }
+        return api.list().then(function (files) {
+          var drawings = files.filter(function (m) { return m.type === "DRAWING"; });
+          status.textContent = "저장한 그림 " + drawings.length + " / 50";
+          create.disabled = !!(window.UrluvSite && window.UrluvSite.previewing) || drawings.length >= 50;
+          var signature = drawings.map(function (item) { return item.id; }).join(",");
+          if (signature === drawingSignature) return;
+          drawingSignature = signature;
+          list.replaceChildren();
+          drawings.forEach(function (item, i) {
+            var file = { name: "크리스마스 카드 " + String(i + 1).padStart(2, "0") + ".png", type: "image", src: item.url, caption: "내가 그린 크리스마스 카드" };
+            var tile = el("div", "file created-media-file");
+            var thumb = el("img", "created-media-thumb"); thumb.src = item.url; thumb.alt = ""; thumb.draggable = false;
+            var name = el("span", "created-media-name", file.name);
+            tile.append(thumb, name);
+            tile.ondblclick = function () { viewFile(file); };
+            if (!(window.UrluvSite && window.UrluvSite.previewing)) {
+              var remove = el("button", "btn file-delete", "삭제");
+              remove.onclick = function () {
+                if (!window.confirm("이 그림을 삭제할까요?")) return;
+                remove.disabled = true;
+                api.remove(item.id).then(function () {
+                  load();
+                  window.dispatchEvent(new Event("urluv-site-media-updated"));
+                }).catch(function () { remove.disabled = false; alert("파일을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요."); });
+              };
+              tile.appendChild(remove);
+            }
+            list.appendChild(tile);
+          });
+        }).catch(function () { status.textContent = "그림 목록을 불러오지 못했어요. 새로고침해 주세요."; });
+      }
+      load();
+      var refresh = api ? window.setInterval(load, 5000) : null;
+      if (api) window.addEventListener("urluv-site-media-updated", load);
+      w.onclose = function () {
+        if (refresh) window.clearInterval(refresh);
+        if (api) window.removeEventListener("urluv-site-media-updated", load);
+      };
     });
   }
 
@@ -695,8 +801,31 @@
       var sh = el("button", "shutter"); sh.setAttribute("aria-label", "촬영");
       shot.appendChild(sh);
       var result = el("div", "row");
-      panel.append(frameRow, shot, result);
+      var status = el("div", "booth-save-status", "사진관에 저장할 수 있는 사진은 최대 10장이에요.");
+      var savedCount = 0;
+      var countLabel = el("span", "booth-photo-count", "저장된 사진 0 / 10");
+      shot.appendChild(countLabel);
+      panel.append(frameRow, shot, result, status);
       root.append(stage, panel); b.appendChild(root);
+
+      var mediaApi = window.UrluvSite && window.UrluvSite.media;
+      function updateCount() {
+        countLabel.textContent = "저장된 사진 " + savedCount + " / 10";
+        sh.disabled = savedCount >= 10 || !!(window.UrluvSite && window.UrluvSite.previewing);
+        if (window.UrluvSite && window.UrluvSite.previewing) status.textContent = "관리자 미리보기에서는 사진을 저장할 수 없어요.";
+        else if (savedCount >= 10) status.textContent = "사진이 10장 저장되어 있어요. 사진관에서 사진을 삭제하면 다시 촬영할 수 있어요.";
+        else status.textContent = "사진관에 저장할 수 있는 사진은 최대 10장이에요.";
+      }
+      function loadPhotoCount() {
+        if (!mediaApi) return Promise.resolve();
+        return mediaApi.list().then(function (files) {
+          savedCount = files.filter(function (m) { return m.type === "PHOTOBOOTH"; }).length;
+          updateCount();
+        }).catch(function () { status.textContent = "저장된 사진 수를 불러오지 못했어요."; });
+      }
+      if (window.UrluvSite && window.UrluvSite.previewing) sh.disabled = true;
+      loadPhotoCount();
+      window.addEventListener("urluv-site-media-updated", loadPhotoCount);
 
       function paint() {
         box.style.setProperty("--fc", frame.color);
@@ -712,9 +841,15 @@
           stream = s; video.srcObject = s; video.hidden = false; ph.hidden = true;
         }).catch(function () { ph.textContent = "카메라를 사용할 수 없어요.\n(그래도 촬영하면 프레임 샘플이 저장돼요)"; });
       }
-      w.onclose = function () { if (stream) stream.getTracks().forEach(function (t) { t.stop(); }); };
+      w.onclose = function () {
+        if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
+        window.removeEventListener("urluv-site-media-updated", loadPhotoCount);
+      };
 
       sh.onclick = async function () {
+        if (savedCount >= 10) { updateCount(); return; }
+        sh.disabled = true;
+        status.textContent = "사진을 저장하고 있어요…";
         await document.fonts.load('28px "Departure Mono"');
         var cv = document.createElement("canvas"); cv.width = 600; cv.height = 800;
         var g = cv.getContext("2d");
@@ -732,17 +867,35 @@
         g.fillStyle = frame.color; g.font = '56px "Departure Mono", serif'; g.textAlign = "center";
         [[60, 80], [540, 80], [60, 760], [540, 760]].forEach(function (p) { g.fillText(frame.deco, p[0], p[1]); });
         g.fillStyle = "#fff"; g.font = '28px "Departure Mono", monospace'; g.fillText(S.names.join(" ♥ ") + "  " + new Date().toISOString().slice(0, 10), 300, 785);
-        result.innerHTML = "";
-        var a = el("a", "btn", "💾 저장"); a.href = cv.toDataURL("image/png"); a.download = "photobooth-" + Date.now() + ".png"; a.style.cssText = "text-decoration:none;color:#3a1f2a;display:inline-block";
-        var th = el("img"); th.src = a.href; th.style.cssText = "height:60px;border:2px solid #fff";
-        result.append(th, a);
+        result.replaceChildren();
+        var imageUrl = cv.toDataURL("image/png");
+        var th = el("img"); th.src = imageUrl; th.style.cssText = "height:60px;border:2px solid #fff";
+        result.appendChild(th);
+        var a = el("a", "btn", "기기에 저장"); a.href = imageUrl; a.download = "photobooth-" + Date.now() + ".png"; a.style.cssText = "text-decoration:none;color:#3a1f2a;display:inline-block";
+        result.appendChild(a);
+        if (!mediaApi) {
+          status.textContent = "데모에서는 기기에만 저장돼요.";
+          sh.disabled = false;
+          return;
+        }
+        cv.toBlob(function (blob) {
+          if (!blob) { status.textContent = "사진을 만들지 못했어요. 다시 촬영해 주세요."; sh.disabled = false; return; }
+          mediaApi.upload("PHOTOBOOTH", blob).then(function () {
+            savedCount += 1; updateCount();
+            status.textContent = "사진관의 사진 폴더에 저장했어요.";
+            window.dispatchEvent(new Event("urluv-site-media-updated"));
+          }).catch(function (error) {
+            status.textContent = error && error.code === "TOO_MANY_SITE_PHOTOS" ? error.message : "저장하지 못했어요. 다시 시도해 주세요.";
+            mediaApi.list().then(function (files) { savedCount = files.filter(function (m) { return m.type === "PHOTOBOOTH"; }).length; updateCount(); }).catch(function () { sh.disabled = false; });
+          });
+        }, "image/png");
       };
     });
   }
 
   // paint
-  function openPaint() {
-    createWin("paint", "untitled - Paint", { w: 560, h: 440 }, function (w, b) {
+  function openPaintCanvas() {
+    createWin("paint", "크리스마스 카드 만들기", { w: 560, h: 440 }, function (w, b) {
       var root = el("div", "paint"), tools = el("div", "paint-tools");
       var cv = el("canvas"); root.append(tools, cv); b.appendChild(root);
       var colors = ["#000000", "#e8789a", "#b8456b", "#ff9eb5", "#f4c542", "#7ec8a9", "#3d5f0d", "#5aa9e6", "#8d6ad8", "#ffffff"];
@@ -753,8 +906,9 @@
         tools.appendChild(s);
       });
       var sz = el("input"); sz.type = "range"; sz.min = 1; sz.max = 24; sz.value = size; sz.oninput = function () { size = +sz.value; };
-      var clr = el("button", "btn", "Clear"), sv = el("button", "btn", "Save");
-      tools.append(sz, clr, sv);
+      var clr = el("button", "btn", "지우기"), sv = el("button", "btn", "이미지 저장");
+      var status = el("span", "generated-media-status", "그림을 저장해요.");
+      tools.append(sz, clr, sv, status);
       var g;
       function fit() {
         var r = cv.getBoundingClientRect(), old = g && cv.width ? cv.toDataURL() : null;
@@ -773,7 +927,20 @@
       });
       cv.addEventListener("pointerup", function () { drawing = false; });
       clr.onclick = function () { g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); };
-      sv.onclick = function () { var a = document.createElement("a"); a.href = cv.toDataURL("image/png"); a.download = "paint.png"; a.click(); };
+      sv.onclick = function () {
+        var api = window.UrluvSite && window.UrluvSite.media;
+        if (!api) { var a = document.createElement("a"); a.href = cv.toDataURL("image/png"); a.download = "christmas-card.png"; a.click(); status.textContent = "데모에서는 기기에만 저장돼요."; return; }
+        sv.disabled = true; status.textContent = "서버에 저장하고 있어요…";
+        cv.toBlob(function (blob) {
+          if (!blob) { status.textContent = "그림을 저장하지 못했어요."; sv.disabled = false; return; }
+          api.upload("DRAWING", blob).then(function () {
+            status.textContent = "크리스마스 카드 폴더에 저장했어요.";
+            window.dispatchEvent(new Event("urluv-site-media-updated"));
+          }).catch(function (error) {
+            status.textContent = error && error.code === "TOO_MANY_SITE_DRAWINGS" ? error.message : "저장하지 못했어요. 다시 시도해 주세요.";
+          }).finally(function () { sv.disabled = false; });
+        }, "image/png");
+      };
     });
   }
 

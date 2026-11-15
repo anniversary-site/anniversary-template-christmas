@@ -42,12 +42,13 @@
   function call(path, options) {
     options = options || {};
     var headers = {};
-    if (options.body) headers["Content-Type"] = "application/json";
+    var formData = typeof FormData !== "undefined" && options.body instanceof FormData;
+    if (options.body && !formData) headers["Content-Type"] = "application/json";
     if (options.token) headers.Authorization = "Bearer " + options.token;
     return fetch(API_URL + path, {
       method: options.method || "GET",
       headers: headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
+      body: options.body ? (formData ? options.body : JSON.stringify(options.body)) : undefined,
       keepalive: !!options.keepalive
     }).catch(function () {
       throw { status: 0, code: "NETWORK", message: "연결이 불안정해요. 잠시 후 다시 시도해 주세요." };
@@ -151,6 +152,19 @@
       },
       remove: function (id) {
         return call(memoPath + "/" + encodeURIComponent(id), { method: "DELETE", token: activeToken });
+      }
+    },
+    // 완성 사이트에서 만든 그림과 포토부스 사진은 주문서 제출 미디어와 분리해 보관합니다.
+    media: {
+      list: function () { return call("/sites/" + key + "/media", { token: activeToken }); },
+      upload: function (type, file) {
+        var body = new FormData();
+        body.append("type", type);
+        body.append("file", file, type.toLowerCase() + ".png");
+        return call("/sites/" + key + "/media", { method: "POST", token: activeToken, body: body });
+      },
+      remove: function (id) {
+        return call("/sites/" + key + "/media/" + encodeURIComponent(id), { method: "DELETE", token: activeToken });
       }
     },
     // 실시간 마켓은 비밀번호로 연 납품 사이트에서만 연결합니다. 비밀번호 토큰은 WebSocket 첫 메시지로 보냅니다.

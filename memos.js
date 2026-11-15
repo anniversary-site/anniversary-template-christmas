@@ -119,6 +119,24 @@
       layer.appendChild(p);
     });
   }
+  // 다른 방문자가 놓거나 수정한 선물을 주기적으로 받아 화면에 반영합니다.
+  function syncServer() {
+    if (!server || document.hidden || !initialized || !placement.hidden) return;
+    site.memos.list().then(function (list) {
+      var remote = validNotes(list).map(function (m) { return { id: m.id, text: m.text, x: m.x, y: m.y }; });
+      var byId = Object.create(null);
+      remote.forEach(function (n) { byId[n.id] = n; });
+      // 아직 저장 중인 내 변경사항은 서버 응답보다 우선시합니다.
+      notes.forEach(function (n) {
+        if (pending[n.id] || timers[n.id]) byId[n.id] = n;
+      });
+      var next = Object.keys(byId).map(function (id) { return byId[id]; });
+      if (JSON.stringify(next) !== JSON.stringify(notes)) {
+        notes = next;
+        render();
+      }
+    }).catch(function () {});
+  }
   function size() {
     return { width: Math.min(260, innerWidth - 16), height: Math.min(240, Math.max(80, innerHeight - 54)) };
   }
@@ -243,6 +261,7 @@
   window.addEventListener('resize', function () {
     render();
   });
+  window.setInterval(syncServer, 3000);
   if (readOnly) { add.disabled = true; add.title = '미리보기에서는 선물을 놓을 수 없어요.'; }
   window.DesktopMemos = { enter: function () {
     if (!initialized) { render(); initialized = true; if (server) loadServer(); }

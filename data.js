@@ -60,10 +60,9 @@ window.SITE = {
   music: {
     title: "크리스마스 캐럴",
     tracks: [
-      { title: "Jingle Bells", artist: "Christmas Songs and Carols - Love to Sing", url: "https://www.youtube.com/watch?v=UPeol7oEzrw" },
-      { title: "Deck the Halls", artist: "Christmas Songs and Carols - Love to Sing", url: "https://www.youtube.com/watch?v=SIFqnEoctI4" },
-      { title: "We Wish You a Merry Christmas", artist: "Christmas Songs and Carols - Love to Sing", url: "https://www.youtube.com/watch?v=g-OF7KGyDis" },
-      { title: "Silent Night", artist: "Christmas Songs and Carols - Love to Sing", url: "https://www.youtube.com/watch?v=nEH7_2c644Q" }
+      { title: "Text Me Merry Christmas", artist: "Straight No Chaser feat. Kristen Bell", url: "https://www.youtube.com/watch?v=EmhfdQlOiy0" },
+      { title: "첫 눈", artist: "EXO", url: "https://www.youtube.com/watch?v=h0b4nw7NDhA" },
+      { title: "Underneath the Tree", artist: "Kelly Clarkson", url: "https://www.youtube.com/watch?v=EM2Fnp_qnE8" }
     ]
   },
   frames: [
