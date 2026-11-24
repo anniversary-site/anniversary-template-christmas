@@ -123,7 +123,9 @@
       });
     }
     tick();
-    if (S.siteMode !== "christmas" && !openWins.information) openInformation();
+    if (orderEditor) {
+      if (S.siteMode !== "christmas") openInformation();
+    } else openNotice();
   }
 
   function selectAvatar() {
@@ -583,6 +585,30 @@
   }
 
   // ---------- apps ----------
+  function openNotice() {
+    createWin("notice", "공지사항", { w: 540, h: 450 }, function (w, body) {
+      var content = el("div", "content site-notice");
+      var sections = [
+        ["크리스마스 마켓 안내", [
+          "방향키 또는 W·A·S·D로 캐릭터를 움직이고, 건물과 소품을 눌러 추억을 열어 보세요.",
+          "트리의 이야기, 사진관의 사진·영상, 편지 우체국, 캐럴 무대와 크리스마스 카드를 둘러볼 수 있어요.",
+          "하단의 선물 남기기로 카드를 남기고, 포토부스와 눈사람 게임도 즐겨 보세요."
+        ]],
+        ["이용 전 확인해 주세요", [
+          "선물 카드·그림·포토부스 결과물은 이 사이트를 함께 보는 사람에게도 보여요. 개인 정보는 남기지 마세요.",
+          "음악은 연결된 YouTube 영상의 설정에 따라 재생되지 않을 수 있어요."
+        ]]
+      ];
+      sections.forEach(function (section) {
+        var heading = el("h2"); heading.textContent = section[0];
+        var list = el("ul");
+        section[1].forEach(function (line) { var item = el("li"); item.textContent = line; list.appendChild(item); });
+        content.append(heading, list);
+      });
+      body.appendChild(content);
+    });
+  }
+
   function openInformation(title) {
     createWin("information", title || (S.siteMode === "christmas" ? "우리의 크리스마스" : "Our Story"), { w: 520, h: 360 }, function (w, body) {
       var info = S.information || {};
@@ -971,7 +997,8 @@
   sm.addEventListener("click", function (e) {
     var a = e.target.closest("button"); if (!a) return; sm.hidden = true;
     var act = a.dataset.act;
-    if (act === "information") openInformation();
+    if (act === "notice") openNotice();
+    else if (act === "information") openInformation();
     else if (act === "gallery") openGalleryChoice();
     else if (act === "letter") openNote("letter");
     else if (act === "music") openMusic();
