@@ -2,25 +2,28 @@
   if (document.body.classList.contains("order-editor-mode")) return;
   var controls = document.createElement("div");
   controls.className = "mobile-view-controls";
-  controls.innerHTML = '<div class="mobile-rotate-prompt" role="status"><strong>가로 화면으로 돌려 주세요</strong><span>기념일 사이트는 가로 화면에서 더 잘 보여요.</span><button type="button" class="btn mobile-enter-fullscreen">전체화면으로 보기</button><span class="mobile-fullscreen-status" aria-live="polite"></span></div><button type="button" class="btn mobile-fullscreen-toggle" aria-label="전체화면으로 보기">⛶</button><button type="button" class="btn mobile-fullscreen-close" aria-label="전체화면 종료" hidden>✕</button>';
+  controls.innerHTML = '<div class="mobile-rotate-prompt" role="status"><strong>가로 화면으로 돌려 주세요</strong><span>기념일 사이트는 가로 화면에서 더 잘 보여요.</span><button type="button" class="btn mobile-enter-fullscreen">전체화면으로 보기</button></div><button type="button" class="btn mobile-fullscreen-toggle" aria-label="전체화면으로 보기">⛶</button><button type="button" class="btn mobile-fullscreen-close" aria-label="전체화면 종료" hidden>✕</button><span class="mobile-fullscreen-status" role="status" aria-live="polite"></span>';
   document.body.appendChild(controls);
   var enter = controls.querySelector(".mobile-enter-fullscreen");
   var toggle = controls.querySelector(".mobile-fullscreen-toggle");
   var close = controls.querySelector(".mobile-fullscreen-close");
   var status = controls.querySelector(".mobile-fullscreen-status");
   var mobile = window.matchMedia("(max-width: 1100px) and (pointer: coarse)");
+  var canFullscreen = !!(document.fullscreenEnabled && document.documentElement.requestFullscreen);
+  var standalone = function () { return navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches; };
 
   function sync() {
-    var active = !!document.fullscreenElement || document.documentElement.classList.contains("mobile-immersive");
+    var active = !!document.fullscreenElement;
     controls.hidden = !mobile.matches;
     close.hidden = !active;
-    toggle.hidden = active;
+    toggle.hidden = active || standalone();
+    enter.textContent = canFullscreen ? "전체화면으로 보기" : "주소창 없이 보는 방법";
+    toggle.textContent = canFullscreen ? "⛶" : "ⓘ";
+    toggle.setAttribute("aria-label", canFullscreen ? "전체화면으로 보기" : "주소창 없이 보는 방법");
   }
   async function openFullscreen() {
-    document.documentElement.classList.add("mobile-immersive");
-    sync();
-    if (!document.documentElement.requestFullscreen) {
-      status.textContent = "이 브라우저는 전체화면을 지원하지 않아요. 가로로 돌려 이용해 주세요.";
+    if (!canFullscreen) {
+      status.textContent = "아이폰에서는 Safari 공유 메뉴의 ‘홈 화면에 추가’로 열면 주소창 없이 볼 수 있어요.";
       return;
     }
     try {
@@ -30,12 +33,11 @@
       }
       status.textContent = "";
     } catch (error) {
-      status.textContent = "전체화면을 열 수 없어요. 가로로 돌려 이용해 주세요.";
+      status.textContent = "이 브라우저에서는 전체화면을 열 수 없어요. Safari에서 홈 화면에 추가해 이용해 주세요.";
     }
     sync();
   }
   async function exitFullscreen() {
-    document.documentElement.classList.remove("mobile-immersive");
     if (document.fullscreenElement && document.exitFullscreen) {
       try { await document.exitFullscreen(); } catch (error) { /* 레이아웃은 복원합니다. */ }
     }
@@ -46,7 +48,6 @@
   toggle.addEventListener("click", openFullscreen);
   close.addEventListener("click", exitFullscreen);
   document.addEventListener("fullscreenchange", function () {
-    if (!document.fullscreenElement) document.documentElement.classList.remove("mobile-immersive");
     sync();
   });
   mobile.addEventListener("change", sync);
