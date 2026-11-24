@@ -542,18 +542,50 @@
       held = Object.create(null);
       if (!frame && (Math.abs(velocity.x) > .5 || Math.abs(velocity.y) > .5)) startMovement();
     });
-    document.querySelectorAll(".market-dpad [data-move]").forEach(function (button) {
-      var direction = button.dataset.move;
-      button.addEventListener("pointerdown", function (event) {
-        event.preventDefault();
-        if (button.setPointerCapture) button.setPointerCapture(event.pointerId);
-        setDirection(direction, true);
+    var dpad = $(".market-dpad");
+    var dpadButtons = Array.prototype.slice.call(dpad.querySelectorAll("[data-move]"));
+    var dpadPointerId = null, dpadDirection = null;
+    function directionAt(clientX, clientY) {
+      var bounds = dpad.getBoundingClientRect();
+      if (clientX < bounds.left || clientX > bounds.right || clientY < bounds.top || clientY > bounds.bottom) return null;
+      var nearest = null, distance = Infinity;
+      dpadButtons.forEach(function (button) {
+        var rect = button.getBoundingClientRect();
+        var dx = clientX - (rect.left + rect.right) / 2;
+        var dy = clientY - (rect.top + rect.bottom) / 2;
+        var nextDistance = dx * dx + dy * dy;
+        if (nextDistance < distance) { nearest = button; distance = nextDistance; }
       });
-      ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (name) {
-        button.addEventListener(name, function () { setDirection(direction, false); });
-      });
+      return nearest ? nearest.dataset.move : null;
+    }
+    function updateDpadDirection(direction) {
+      if (direction === dpadDirection) return;
+      if (dpadDirection) setDirection(dpadDirection, false);
+      dpadDirection = direction;
+      if (direction) setDirection(direction, true);
+    }
+    dpad.addEventListener("pointerdown", function (event) {
+      if (dpadPointerId !== null || !event.target.closest("[data-move]")) return;
+      event.preventDefault();
+      dpadPointerId = event.pointerId;
+      dpad.setPointerCapture(event.pointerId);
+      updateDpadDirection(event.target.dataset.move);
+    });
+    dpad.addEventListener("pointermove", function (event) {
+      if (event.pointerId === dpadPointerId) updateDpadDirection(directionAt(event.clientX, event.clientY));
+    });
+    function releaseDpad(event) {
+      if (event.pointerId !== dpadPointerId) return;
+      updateDpadDirection(null);
+      dpadPointerId = null;
+    }
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (name) {
+      dpad.addEventListener(name, releaseDpad);
+    });
+    dpadButtons.forEach(function (button) {
       button.addEventListener("click", function (event) {
         if (event.detail !== 0) return;
+        var direction = button.dataset.move;
         setDirection(direction, true);
         window.setTimeout(function () { setDirection(direction, false); }, 140);
       });
