@@ -10,6 +10,7 @@
   var joined = false;
   var lastSentAt = 0;
   var reconnectDelay = 2000;
+  var snowballSupported = false;
 
   function idForTab(siteKey) {
     var key = "urluv-market-visitor:" + siteKey;
@@ -48,6 +49,7 @@
     if (!player) {
       player = document.createElement("div");
       player.className = "remote-player";
+      player.dataset.visitorId = data.visitorId;
       var sprite = document.createElement("span");
       sprite.className = "avatar-sprite";
       var name = document.createElement("span");
@@ -76,6 +78,7 @@
 
   function onMessage(event) {
     if (event.type === "snapshot" && Array.isArray(event.players)) {
+      snowballSupported = Array.isArray(event.features) && event.features.includes("snowball");
       players.forEach(function (player) { player.remove(); });
       players.clear();
       event.players.forEach(renderPlayer);
@@ -83,6 +86,7 @@
       reconnectDelay = 2000;
       onlineLabel();
     } else if (event.type === "joined" || event.type === "moved") renderPlayer(event.player);
+    else if (event.type === "snowball" && window.MarketSnowball) window.MarketSnowball.onEvent(event);
     else if (event.type === "left") removePlayer(event.visitorId);
   }
 
@@ -104,6 +108,7 @@
       if (socket !== current) return;
       socket = null;
       joined = false;
+      snowballSupported = false;
       window.clearInterval(heartbeatTimer);
       heartbeatTimer = null;
       players.forEach(function (player) { player.remove(); });
@@ -135,6 +140,7 @@
   function stop() {
     started = false;
     joined = false;
+    snowballSupported = false;
     window.clearTimeout(reconnectTimer);
     window.clearInterval(heartbeatTimer);
     reconnectTimer = null;
@@ -162,6 +168,11 @@
       connect();
     },
     publish: publish,
+    throwSnowball: function () {
+      if (!socket || socket.readyState !== WebSocket.OPEN || !joined || !snowballSupported) return false;
+      try { socket.send(JSON.stringify({ type: "snowball" })); return true; } catch (error) { return false; }
+    },
+    isMe: function (id) { return !!visitorId && id === visitorId; },
     stop: stop
   };
 
