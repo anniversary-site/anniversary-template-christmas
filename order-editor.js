@@ -13,7 +13,6 @@
   var state = { data: {}, media: { photos: [], videos: [] }, limits: {} };
   var step = '';
   var entered = false;
-  var localPreviews = { photos: {}, videos: {} };
   var activeInputs = {};
   var aiBusy = false;
 
@@ -185,10 +184,7 @@
       var card = node('div', 'order-editor-media-card');
       var icon = node('img');
       icon.alt = '';
-      icon.src = kind === 'photos'
-        ? (localPreviews.photos[index] || item.url || 'assets/icons/photo.svg')
-        : 'assets/icons/video.svg';
-      icon.onerror = function () { icon.onerror = null; icon.src = kind === 'photos' ? 'assets/icons/photo.svg' : 'assets/icons/video.svg'; };
+      icon.src = kind === 'photos' ? 'assets/icons/photo.svg' : 'assets/icons/video.svg';
       card.appendChild(icon);
       card.appendChild(node('span', 'order-editor-media-name', item.name || '업로드 중…'));
       card.appendChild(node('small', '', item.status === 'loading' ? '업로드 중…' : item.status === 'error' ? '업로드 실패 · 다시 올려 주세요' : '저장됨'));
@@ -204,7 +200,6 @@
       var remove = node('button', 'btn', '삭제'); remove.type = 'button';
       remove.onclick = function () {
         state.media[kind][index] = null;
-        if (localPreviews[kind][index]) { URL.revokeObjectURL(localPreviews[kind][index]); delete localPreviews[kind][index]; }
         post('remove', { kind: kind, index: index }); renderMedia(kind);
       };
       card.appendChild(remove);
@@ -220,7 +215,6 @@
       var file = input.files && input.files[0]; if (!file) return;
       var index = state.media[kind].findIndex(function (item) { return !item; });
       if (index < 0) return;
-      if (kind === 'photos') localPreviews.photos[index] = URL.createObjectURL(file);
       state.media[kind][index] = { name: file.name, status: 'loading', text: '' };
       post('upload', { kind: kind, index: index, file: file });
       renderMedia(kind);
