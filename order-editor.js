@@ -258,7 +258,8 @@
         var input = node('input', 'order-editor-input'); input.value = music[fieldInfo[0]] || '';
         input.placeholder = fieldInfo[1]; input.setAttribute('aria-label', '음악 ' + (index + 1) + ' ' + fieldInfo[1]);
         input.oninput = function () {
-          var next = musics.map(function (item) { return Object.assign({}, item); });
+          var current = state.data.musics && state.data.musics.length ? state.data.musics : musics;
+          var next = current.map(function (item) { return Object.assign({}, item); });
           next[index][fieldInfo[0]] = input.value;
           state.data.musics = next; post('patch', { field: 'musics', value: next });
         };
@@ -266,13 +267,13 @@
       });
       if (musics.length > 1) {
         var remove = node('button', 'btn', '음악 삭제'); remove.type = 'button';
-        remove.onclick = function () { state.data.musics = musics.filter(function (_, i) { return i !== index; }); post('patch', { field: 'musics', value: state.data.musics }); renderMusic(); };
+        remove.onclick = function () { state.data.musics = (state.data.musics || musics).filter(function (_, i) { return i !== index; }); post('patch', { field: 'musics', value: state.data.musics }); renderMusic(); };
         card.appendChild(remove);
       }
       list.appendChild(card);
     });
     var add = node('button', 'btn', '+ 음악 추가'); add.type = 'button';
-    add.onclick = function () { state.data.musics = musics.concat({ title: '', artist: '', youtubeUrl: '' }); post('patch', { field: 'musics', value: state.data.musics }); renderMusic(); };
+    add.onclick = function () { state.data.musics = (state.data.musics && state.data.musics.length ? state.data.musics : musics).concat({ title: '', artist: '', youtubeUrl: '' }); post('patch', { field: 'musics', value: state.data.musics }); renderMusic(); };
     list.appendChild(add);
   }
 
