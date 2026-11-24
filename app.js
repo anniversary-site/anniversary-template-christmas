@@ -645,6 +645,9 @@
   // ---------- apps ----------
   function openNotice() {
     createWin("notice", "공지사항", { w: 540, h: 450 }, function (w, body) {
+      w.el.classList.add("notice-window");
+      w.el.style.removeProperty("width");
+      w.el.style.removeProperty("height");
       var content = el("div", "content site-notice");
       var sections = [
         ["크리스마스 마켓 안내", [
