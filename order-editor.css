@@ -1,0 +1,47 @@
+body.order-editor-mode #login-win { width: min(550px, 94vw); }
+body.order-editor-mode .dicon { pointer-events: none; }
+body.order-editor-mode #login-user { background: #fff; }
+body.order-editor-mode #login-pw::placeholder,
+body.order-editor-mode #login-user::placeholder,
+body.order-editor-mode #order-editor-hint::placeholder { color: #786d69; opacity: 1; }
+body.order-editor-mode #login-cancel,
+body.order-editor-mode #memo-add,
+body.order-editor-mode #memo-toggle,
+body.order-editor-mode #renewal-badge,
+body.order-editor-mode .market-dpad { display: none !important; }
+body.order-editor-mode #windows .win { width: min(680px, calc(100vw - 28px)) !important; height: min(570px, calc(100vh - 85px)) !important; left: max(8px, calc((100vw - 680px) / 2)) !important; top: 32px !important; }
+body.order-editor-mode #windows .win .content { padding: 17px 20px; user-select: text; }
+body.order-editor-mode .order-editor-example { margin: 0 0 18px; color: #315247; font-size: 14px; line-height: 1.5; }
+body.order-editor-mode .order-editor-field { display: grid; grid-template-columns: 145px minmax(0, 1fr); gap: 12px; align-items: start; margin: 0 0 18px; font-size: 16px; }
+body.order-editor-mode .order-editor-field > span { padding-top: 7px; color: #315247; }
+body.order-editor-mode .order-editor-input { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #9aa99f; border-radius: 3px; padding: 7px 9px; background: #fff; color: #332629; font: inherit; font-size: 16px; user-select: text; }
+body.order-editor-mode textarea.order-editor-input { min-height: 72px; resize: vertical; line-height: 1.5; }
+body.order-editor-mode .order-editor-input::placeholder { color: #897f7d; opacity: 1; }
+body.order-editor-mode .order-editor-input.order-editor-sample { color: #897f7d; }
+body.order-editor-mode .order-editor-input:focus { outline: 2px solid #b87042; outline-offset: 2px; }
+body.order-editor-mode .order-editor-letter-actions { display: flex; gap: 9px; margin: 8px 0 16px; }
+body.order-editor-mode .order-editor-letter-actions .btn,
+body.order-editor-mode .order-editor-ai-box .btn { padding: 7px 11px; }
+body.order-editor-mode .order-editor-letter-actions [aria-pressed="true"],
+body.order-editor-mode .order-editor-ai-box [aria-pressed="true"] { background: #e8c77b; box-shadow: inset 1px 1px 2px #6f5530; }
+body.order-editor-mode .order-editor-ai-box { border-top: 1px solid #cbd8cf; padding-top: 15px; }
+body.order-editor-mode .order-editor-ai-box[hidden] { display: none; }
+body.order-editor-mode .order-editor-media-files { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+body.order-editor-mode .order-editor-media-count { grid-column: 1 / -1; margin: 0; }
+body.order-editor-mode .order-editor-media-card,
+body.order-editor-mode .order-editor-upload { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; min-height: 105px; padding: 12px; border: 1px solid #a8b3a8; background: #f7f8f3; overflow-wrap: anywhere; }
+body.order-editor-mode .order-editor-media-card img,
+body.order-editor-mode .order-editor-upload img { width: 38px; height: 38px; image-rendering: pixelated; }
+body.order-editor-mode .order-editor-media-card img { width: 82px; height: 82px; object-fit: cover; }
+body.order-editor-mode .order-editor-media-card small { color: #52665c; }
+body.order-editor-mode .order-editor-upload { justify-content: center; cursor: pointer; border-style: dashed; }
+body.order-editor-mode .order-editor-upload input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+body.order-editor-mode .order-editor-upload:focus-within { outline: 2px solid #b87042; }
+body.order-editor-mode .order-editor-music-card { border: 1px solid #d2d9d2; padding: 13px; margin-bottom: 12px; }
+body.order-editor-mode .order-editor-music-card .order-editor-field { grid-template-columns: 120px minmax(0, 1fr); margin: 12px 0; }
+@media (max-width: 700px) {
+  body.order-editor-mode #windows .win { left: 8px !important; top: 12px !important; height: min(600px, calc(100vh - 85px)) !important; }
+  body.order-editor-mode .order-editor-field,
+  body.order-editor-mode .order-editor-music-card .order-editor-field { grid-template-columns: 1fr; gap: 4px; }
+  body.order-editor-mode .order-editor-field > span { padding-top: 0; }
+}

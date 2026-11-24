@@ -51,9 +51,59 @@
   }
 
   var site = window.UrluvSite || { key: null };
+  var orderEditor = new URLSearchParams(location.search).has("orderEditor") && window.parent !== window;
   var marketFacing = "down";
   var marketWalking = false;
   var lastPresencePublish = 0;
+  var lastSnowballThrow = 0;
+  var marketFrozenUntil = 0;
+
+  function throwSnowball() {
+    if ($("#desktop").hidden || Date.now() - lastSnowballThrow < 900 || Date.now() < marketFrozenUntil) return;
+    lastSnowballThrow = Date.now();
+    if (window.MarketPresence && window.MarketPresence.throwSnowball()) return;
+    var player = $("#player");
+    var x = parseFloat(player.style.left) || 50, y = parseFloat(player.style.top) || 62;
+    var dx = marketFacing === "left" ? -250 / MAP_WIDTH * 100 : marketFacing === "right" ? 250 / MAP_WIDTH * 100 : 0;
+    var dy = marketFacing === "up" ? -250 / MAP_HEIGHT * 100 : marketFacing === "down" ? 250 / MAP_HEIGHT * 100 : 0;
+    showSnowball({ x: x, y: y, endX: Math.max(0, Math.min(100, x + dx)), endY: Math.max(0, Math.min(100, y + dy)) });
+  }
+
+  function showSnowball(event) {
+    var world = $(".market-world");
+    var x = Number(event.x), y = Number(event.y), endX = Number(event.endX), endY = Number(event.endY);
+    if (!world || [x, y, endX, endY].some(function (value) { return !Number.isFinite(value) || value < 0 || value > 100; })) return;
+    var snowball = el("span", "market-snowball");
+    snowball.style.left = x + "%";
+    snowball.style.top = y + "%";
+    world.appendChild(snowball);
+    var distance = Math.hypot((endX - x) / 100 * MAP_WIDTH, (endY - y) / 100 * MAP_HEIGHT);
+    var duration = Math.max(180, Math.min(480, distance * 1.7));
+    snowball.animate([
+      { transform: "translate(-50%, -50%) scale(1)" },
+      { transform: "translate(calc(-50% + " + ((endX - x) / 100 * MAP_WIDTH) + "px), calc(-50% + " + ((endY - y) / 100 * MAP_HEIGHT - 18) + "px)) scale(1.25)", offset: .5 },
+      { transform: "translate(calc(-50% + " + ((endX - x) / 100 * MAP_WIDTH) + "px), calc(-50% + " + ((endY - y) / 100 * MAP_HEIGHT) + "px)) scale(.8)" }
+    ], { duration: duration, easing: "ease-out" }).finished.catch(function () {}).then(function () { snowball.remove(); });
+    if (!event.targetVisitorId) return;
+    var target = Array.from($("#other-players").children).find(function (node) { return node.dataset.visitorId === event.targetVisitorId; });
+    if (!target && window.MarketPresence && window.MarketPresence.isMe(event.targetVisitorId)) target = $("#player");
+    if (!target) return;
+    var until = Date.now() + 1800;
+    target.dataset.snowedUntil = String(until);
+    if (target.id === "player") {
+      marketFrozenUntil = until;
+      window.dispatchEvent(new Event("market-frozen"));
+    }
+    window.setTimeout(function () {
+      if (Number(target.dataset.snowedUntil) !== until) return;
+      target.classList.add("snowed");
+      window.setTimeout(function () {
+        if (Number(target.dataset.snowedUntil) === until) target.classList.remove("snowed");
+      }, Math.max(0, until - Date.now()));
+    }, duration);
+  }
+
+  window.MarketSnowball = { onEvent: showSnowball };
 
   function publishMarketPresence(force) {
     var player = $("#player");
@@ -97,7 +147,11 @@
     }
   }
   $("#login-ok").onclick = tryLogin;
-  $("#login-pw").addEventListener("keydown", function (e) { if (e.key === "Enter") tryLogin(); });
+  $("#login-pw").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    if (orderEditor) { e.preventDefault(); $("#login-ok").click(); }
+    else tryLogin();
+  });
   $("#login-cancel").onclick = function () { $("#login-pw").value = ""; $("#login-err").hidden = true; };
 
   function enter() {
@@ -119,7 +173,7 @@
     }
     tick();
     if (S.siteMode !== "christmas") openInformation();
-    else openNotice();
+    else if (!orderEditor) openNotice();
   }
 
   function selectAvatar() {
@@ -150,6 +204,8 @@
       $("#login-pw").disabled = true; $("#login-ok").disabled = true;
     });
     site.resume().then(function (ok) { if (ok) enter(); });
+  } else if (orderEditor) {
+    // 주문 사이트가 실제 로그인 화면부터 단계별로 보여 줍니다.
   } else {
     // 데모 화면: 비밀번호를 몰라도 둘러볼 수 있게 우회 버튼을 보여 줍니다(고객 사이트에는 없음).
     $("#login-demo-row").hidden = false;
@@ -407,6 +463,9 @@
       var dt = Math.min(.04, (time - previousTime) / 1000);
       previousTime = time;
       if (dt === 0) { frame = requestAnimationFrame(animateMovement); return; }
+      if (Date.now() < marketFrozenUntil) {
+        held = Object.create(null); velocity.x = 0; velocity.y = 0;
+      }
       var x = (parseFloat(player.style.left) || 50) / 100 * MAP_WIDTH;
       var y = (parseFloat(player.style.top) || 62) / 100 * MAP_HEIGHT;
       var horizontal = (held.right ? 1 : 0) - (held.left ? 1 : 0);
@@ -454,6 +513,7 @@
       if (!frame) { previousTime = 0; frame = requestAnimationFrame(animateMovement); }
     }
     function setDirection(direction, active) {
+      if (active && Date.now() < marketFrozenUntil) return;
       if (active) {
         if (held[direction]) return;
         held[direction] = true;
@@ -465,6 +525,11 @@
     }
     document.addEventListener("keydown", function (event) {
       if (event.target.closest("input,textarea,select,[contenteditable=true]") || $("#desktop").hidden) return;
+      if (event.code === "Space" && !event.target.closest("button,[role=button]")) {
+        event.preventDefault();
+        if (!event.repeat) throwSnowball();
+        return;
+      }
       var direction = directions[event.code] || fallbackDirections[event.key];
       if (!direction) return;
       event.preventDefault(); setDirection(direction, true);
@@ -493,6 +558,7 @@
         window.setTimeout(function () { setDirection(direction, false); }, 140);
       });
     });
+    $("#snowball-button").addEventListener("click", throwSnowball);
   }
 
   function launch(ic) {
@@ -999,4 +1065,20 @@
     else if (act === "game") openMinesweeper();
     else if (act === "logout") { try { sessionStorage.removeItem("anniv-auth"); } catch (er) {} if (site.forget) site.forget(); location.reload(); }
   });
+  if (orderEditor) {
+    window.UrluvEditorHooks = {
+      enter: enter,
+      openInformation: openInformation,
+      openNote: openNote,
+      createWin: createWin,
+      highlight: showMapHighlight,
+      closeAll: function () {
+        Object.keys(openWins).forEach(function (key) {
+          openWins[key].el.remove();
+          openWins[key].task.remove();
+          delete openWins[key];
+        });
+      }
+    };
+  }
 })();
