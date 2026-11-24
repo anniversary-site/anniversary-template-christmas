@@ -23,9 +23,9 @@
     if (text != null) result.textContent = text;
     return result;
   }
-  function post(type, payload) {
+  function post(type, payload, transfer) {
     if (!parentOrigin) return;
-    window.parent.postMessage(Object.assign({ channel: 'urluv-order-editor', type: type }, payload || {}), parentOrigin);
+    window.parent.postMessage(Object.assign({ channel: 'urluv-order-editor', type: type }, payload || {}), parentOrigin, transfer || []);
   }
   function patch(field, value) {
     state.data[field] = value;
@@ -215,9 +215,23 @@
       var file = input.files && input.files[0]; if (!file) return;
       var index = state.media[kind].findIndex(function (item) { return !item; });
       if (index < 0) return;
+      var maxSize = kind === 'photos' ? state.limits.photoMaxSizeMb : state.limits.videoMaxSizeMb;
+      if (maxSize && file.size > maxSize * 1024 * 1024) {
+        state.media[kind][index] = { name: file.name, status: 'error', text: '' };
+        setTimeout(function () { renderMedia(kind); }, 0);
+        return;
+      }
       state.media[kind][index] = { name: file.name, status: 'loading', text: '' };
-      post('upload', { kind: kind, index: index, file: file });
-      renderMedia(kind);
+      setTimeout(function () { renderMedia(kind); }, 0);
+      file.arrayBuffer().then(function (bytes) {
+        post('upload', {
+          kind: kind, index: index, bytes: bytes, name: file.name,
+          mimeType: file.type, lastModified: file.lastModified
+        }, [bytes]);
+      }).catch(function () {
+        state.media[kind][index] = { name: file.name, status: 'error', text: '' };
+        renderMedia(kind);
+      });
     };
     add.appendChild(input); list.appendChild(add);
     if (items.every(Boolean)) add.hidden = true;
