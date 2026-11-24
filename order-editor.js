@@ -1,7 +1,7 @@
 (function () {
   if (!new URLSearchParams(location.search).has('orderEditor') || window.parent === window) return;
 
-  var allowedOrigins = ['https://urluv.shop', 'https://www.urluv.shop', 'https://edit.urluv.shop', 'https://urluv-order.vercel.app', 'http://localhost:5173', 'http://127.0.0.1:5173'];
+  var allowedOrigins = ['https://urluv.shop', 'https://www.urluv.shop', 'https://staging.urluv.shop', 'https://edit.urluv.shop', 'https://urluv-order.vercel.app', 'http://localhost:5173', 'http://127.0.0.1:5173'];
   var parentOrigin = null;
   try {
     var referrerOrigin = new URL(document.referrer).origin;
