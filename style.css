@@ -1215,13 +1215,14 @@ select {
     position: absolute;
     z-index: 5;
     left: 8px;
-    bottom: 9px;
+    bottom: 26px;
     display: grid;
     grid-template-columns: repeat(3, 37px);
     grid-template-rows: repeat(2, 34px);
     gap: 3px;
+    touch-action: none;
   }
-  .market-dpad button { border: 2px solid; border-color: #fff #756850 #756850 #fff; background: #f3e7c7eF; color: #315247; font-size: 13px; touch-action: manipulation; }
+  .market-dpad button { border: 2px solid; border-color: #fff #756850 #756850 #fff; background: #f3e7c7eF; color: #315247; font-size: 13px; touch-action: none; }
   .market-dpad button[data-move="up"] { grid-column: 2; grid-row: 1; }
   .market-dpad button[data-move="left"] { grid-column: 1; grid-row: 2; }
   .market-dpad button[data-move="down"] { grid-column: 2; grid-row: 2; }
